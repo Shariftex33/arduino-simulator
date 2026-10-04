@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 280 150">
+  <rect width="280" height="150" rx="14" fill="#0f172a"/>
+  <text x="16" y="28" fill="#6ee7b7" font-family="Consolas, monospace" font-size="15">R = (5 - 2) / 0.02</text>
+  <text x="16" y="52" fill="#f8fafc" font-family="Consolas, monospace" font-size="15">R = 150 ohm</text>
+  <text x="16" y="82" fill="#94a3b8" font-family="Segoe UI, sans-serif" font-size="13">5V supply, LED uses about 2V</text>
+  <text x="16" y="102" fill="#94a3b8" font-family="Segoe UI, sans-serif" font-size="13">0.02 A is 20 milliamps</text>
+  <text x="16" y="128" fill="#fde68a" font-family="Segoe UI, sans-serif" font-size="13">220 ohm is the gentler kit choice</text>
+</svg>

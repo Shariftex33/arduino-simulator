@@ -1,0 +1,14 @@
+services:
+  web:
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      PORT: 8080
+      TZ: Europe/Istanbul
+      DATA_DIR: /data
+      BILLING_WEBHOOK_SECRET: change-me
+    volumes:
+      - lab-data:/data
+volumes:
+  lab-data:

@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 88">
+  <rect x="8" y="4" width="48" height="30" rx="4" fill="#14532d" stroke="#86efac" stroke-width="2"/>
+  <text x="32" y="23" text-anchor="middle" fill="#ecfccb" font-size="9" font-family="sans-serif" font-weight="700">SOIL</text>
+  <rect x="16" y="32" width="8" height="40" rx="2" fill="#94a3b8" stroke="#475569"/>
+  <rect x="40" y="32" width="8" height="40" rx="2" fill="#94a3b8" stroke="#475569"/>
+  <rect x="14" y="66" width="12" height="16" rx="2" fill="#64748b"/>
+  <rect x="38" y="66" width="12" height="16" rx="2" fill="#64748b"/>
+</svg>

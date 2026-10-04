@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Teacher dashboard</title>
+<link rel="stylesheet" href="../css/platform.css">
+</head>
+<body data-depth="1">
+<header class="site-header"></header>
+<main>
+  <div class="page-head">
+    <h1>Teacher dashboard</h1>
+    <p class="lede">Open a class, share the join code, and watch XP, streaks, and certificates.</p>
+  </div>
+  <section class="panel" id="teach-app">
+    <p class="notice">Loading…</p>
+  </section>
+</main>
+<script src="../js/sync.js"></script>
+<script src="../js/platform.js"></script>
+<script>
+(function () {
+  const host = document.getElementById('teach-app');
+  function esc(value) {
+    return String(value == null ? '' : value).replace(/[&<>"]/g, function (ch) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch];
+    });
+  }
+  function fail(error) {
+    host.querySelectorAll('.error').forEach(function (node) { node.textContent = error.message || 'Request failed'; });
+  }
+  function showRoster(classroom) {
+    const students = classroom.roster || [];
+    return '<h2>' + esc(classroom.name) + '</h2><p class="lede">Join code ' + esc(classroom.joinCode) + '</p>' +
+      (students.length ? '<table class="board-table"><thead><tr><th>Student</th><th>XP</th><th>Streak</th><th>Solved</th><th>Certificates</th></tr></thead><tbody>' +
+        students.map(function (student) {
+          return '<tr><td>' + esc(student.name) + '</td><td>' + student.xp + '</td><td>' + student.streak + '</td><td>' + student.solved + '</td><td>' + student.certificates + '</td></tr>';
+        }).join('') + '</tbody></table>' : '<p class="notice">No students yet.</p>');
+  }
+  function render(data) {
+    const user = window.EduSync.profile();
+    if (!user) {
+      host.innerHTML = '<p class="lede">Sign in from the account page. Teachers can open a class. Students can join with a code.</p><p><a class="btn" href="../account/index.html">Account</a></p>';
+      return;
+    }
+    const classes = data.teaching || [];
+    host.innerHTML =
+      '<p class="lede">' + esc(user.name) + ' · ' + esc(user.role) + ' · ' + esc(user.plan) + ' · ' + classes.length + ' / ' + data.classLimit + ' classes</p>' +
+      '<p class="error"></p>' +
+      '<form id="join-form" class="form"><input name="code" type="text" placeholder="Join code" required><button class="btn" type="submit">Join class</button></form>' +
+      (data.classLimit ? '<form id="create-form" class="form"><input name="name" type="text" placeholder="Class name" required><button class="btn" type="submit">Create class</button></form>' : '<p class="notice">A teacher account can open one trial class. The <a href="../pricing/index.html">Classroom plan</a> opens more.</p>') +
+      '<div class="stack" id="class-list">' + classes.map(function (room) {
+        return '<a href="?class=' + encodeURIComponent(room.id) + '"><span><b>' + esc(room.name) + '</b><span class="project-note">Code ' + esc(room.join_code) + '</span></span></a>';
+      }).join('') + '</div>' +
+      '<div id="roster" style="margin-top:16px"></div>';
+    const join = document.getElementById('join-form');
+    join.addEventListener('submit', function (event) {
+      event.preventDefault();
+      window.EduSync.request('/api/classes/join', { method: 'POST', body: { code: new FormData(join).get('code') } })
+        .then(function () { return refresh(); }).catch(fail);
+    });
+    const create = document.getElementById('create-form');
+    if (create) {
+      create.addEventListener('submit', function (event) {
+        event.preventDefault();
+        window.EduSync.request('/api/classes', { method: 'POST', body: { name: new FormData(create).get('name') } })
+          .then(function (room) { location.search = '?class=' + encodeURIComponent(room.id); })
+          .catch(fail);
+      });
+    }
+    const selected = new URLSearchParams(location.search).get('class');
+    if (!selected) return;
+    window.EduSync.request('/api/classes/' + selected).then(function (classroom) {
+      document.getElementById('roster').innerHTML = showRoster(classroom);
+    }).catch(fail);
+  }
+  function refresh() {
+    return window.EduSync.request('/api/classes').then(render);
+  }
+  window.EduSync.hydrate().then(function () {
+    if (!window.EduSync.token()) return render({});
+    return refresh();
+  }).catch(function () {
+    host.innerHTML = '<p class="notice">The teacher dashboard needs the server. Open this site from the Arduino Lab server.</p>';
+  });
+})();
+</script>
+</body>
+</html>

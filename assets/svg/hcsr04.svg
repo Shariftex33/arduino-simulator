@@ -1,0 +1,81 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 156">
+  <defs>
+    <linearGradient id="us-pcb" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#3b82f6"/>
+      <stop offset="0.45" stop-color="#1d4ed8"/>
+      <stop offset="1" stop-color="#1e3a8a"/>
+    </linearGradient>
+    <linearGradient id="us-ring" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#f8fafc"/>
+      <stop offset="0.35" stop-color="#cbd5e1"/>
+      <stop offset="0.7" stop-color="#64748b"/>
+      <stop offset="1" stop-color="#e2e8f0"/>
+    </linearGradient>
+    <radialGradient id="us-dish" cx="42%" cy="38%" r="68%">
+      <stop offset="0" stop-color="#334155"/>
+      <stop offset="0.55" stop-color="#0f172a"/>
+      <stop offset="1" stop-color="#020617"/>
+    </radialGradient>
+    <pattern id="us-mesh" width="3.2" height="3.2" patternUnits="userSpaceOnUse">
+      <path d="M0 3.2 L3.2 0 M-1 1 L1 -1 M2.2 4.2 L4.2 2.2" stroke="#94a3b8" stroke-width="0.35" opacity="0.55"/>
+    </pattern>
+    <linearGradient id="us-pin" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#78716c"/>
+      <stop offset="0.28" stop-color="#f5f5f4"/>
+      <stop offset="0.55" stop-color="#d6d3d1"/>
+      <stop offset="1" stop-color="#57534e"/>
+    </linearGradient>
+    <linearGradient id="us-xtal" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#f8fafc"/>
+      <stop offset="0.5" stop-color="#94a3b8"/>
+      <stop offset="1" stop-color="#475569"/>
+    </linearGradient>
+    <clipPath id="us-left"><circle cx="64" cy="54" r="24"/></clipPath>
+    <clipPath id="us-right"><circle cx="176" cy="54" r="24"/></clipPath>
+  </defs>
+
+  <rect x="86" y="100" width="5.2" height="48" rx="0.6" fill="url(#us-pin)"/>
+  <rect x="104" y="100" width="5.2" height="48" rx="0.6" fill="url(#us-pin)"/>
+  <rect x="122" y="100" width="5.2" height="48" rx="0.6" fill="url(#us-pin)"/>
+  <rect x="140" y="100" width="5.2" height="48" rx="0.6" fill="url(#us-pin)"/>
+  <rect x="158" y="100" width="5.2" height="48" rx="0.6" fill="url(#us-pin)"/>
+
+  <rect x="8" y="8" width="224" height="96" rx="3" fill="url(#us-pcb)" stroke="#172554" stroke-width="1"/>
+  <rect x="8" y="8" width="224" height="7" fill="#93c5fd" opacity="0.28"/>
+
+  <text x="16" y="22" fill="#f8fafc" font-family="Arial, sans-serif" font-size="9" font-weight="700">HY-SRF05</text>
+  <text x="188" y="20" fill="#dbeafe" font-family="Arial, sans-serif" font-size="7">120203</text>
+  <text x="16" y="78" fill="#dbeafe" font-family="Arial, sans-serif" font-size="8">F2</text>
+  <text x="210" y="78" fill="#dbeafe" font-family="Arial, sans-serif" font-size="8">F1</text>
+
+  <rect x="108" y="14" width="24" height="13" rx="6" fill="url(#us-xtal)" stroke="#334155" stroke-width="0.4"/>
+  <text x="120" y="40" text-anchor="middle" fill="#eff6ff" font-family="Arial, sans-serif" font-size="8" font-weight="700">HY</text>
+  <text x="120" y="86" text-anchor="middle" fill="#eff6ff" font-family="Arial, sans-serif" font-size="8" font-weight="700">SRF05</text>
+
+  <g>
+    <circle cx="64" cy="54" r="31" fill="url(#us-ring)"/>
+    <circle cx="64" cy="54" r="25" fill="url(#us-dish)"/>
+    <g clip-path="url(#us-left)">
+      <rect x="39" y="29" width="50" height="50" fill="url(#us-mesh)"/>
+    </g>
+    <circle cx="64" cy="54" r="25" fill="none" stroke="#020617" stroke-width="0.6"/>
+    <ellipse cx="56" cy="44" rx="8" ry="4" fill="#fff" opacity="0.18"/>
+    <text x="64" y="96" text-anchor="middle" fill="#f8fafc" font-family="Arial, sans-serif" font-size="9" font-weight="700">T</text>
+  </g>
+  <g>
+    <circle cx="176" cy="54" r="31" fill="url(#us-ring)"/>
+    <circle cx="176" cy="54" r="25" fill="url(#us-dish)"/>
+    <g clip-path="url(#us-right)">
+      <rect x="151" y="29" width="50" height="50" fill="url(#us-mesh)"/>
+    </g>
+    <circle cx="176" cy="54" r="25" fill="none" stroke="#020617" stroke-width="0.6"/>
+    <ellipse cx="168" cy="44" rx="8" ry="4" fill="#fff" opacity="0.18"/>
+    <text x="176" y="96" text-anchor="middle" fill="#f8fafc" font-family="Arial, sans-serif" font-size="9" font-weight="700">R</text>
+  </g>
+
+  <text x="88" y="102" text-anchor="middle" fill="#dbeafe" font-family="Arial, sans-serif" font-size="6">Vcc</text>
+  <text x="106" y="102" text-anchor="middle" fill="#dbeafe" font-family="Arial, sans-serif" font-size="6">Trig</text>
+  <text x="124" y="102" text-anchor="middle" fill="#dbeafe" font-family="Arial, sans-serif" font-size="6">Echo</text>
+  <text x="142" y="102" text-anchor="middle" fill="#dbeafe" font-family="Arial, sans-serif" font-size="6">OUT</text>
+  <text x="160" y="102" text-anchor="middle" fill="#dbeafe" font-family="Arial, sans-serif" font-size="6">GND</text>
+</svg>

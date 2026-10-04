@@ -1,0 +1,91 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 300" width="720" height="300" role="img" aria-label="ESP32 DevKit">
+  <defs>
+    <linearGradient id="esp_pcb" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1f2937"/>
+      <stop offset="0.2" stop-color="#111827"/>
+      <stop offset="1" stop-color="#030712"/>
+    </linearGradient>
+    <linearGradient id="esp_can" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#e5e7eb"/>
+      <stop offset="0.45" stop-color="#9ca3af"/>
+      <stop offset="1" stop-color="#4b5563"/>
+    </linearGradient>
+    <linearGradient id="esp_usb" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#f8fafc"/>
+      <stop offset="0.4" stop-color="#cbd5e1"/>
+      <stop offset="1" stop-color="#64748b"/>
+    </linearGradient>
+    <linearGradient id="esp_hdr" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#475569"/>
+      <stop offset="0.35" stop-color="#1e293b"/>
+      <stop offset="1" stop-color="#020617"/>
+    </linearGradient>
+  </defs>
+
+  <rect x="70" y="24" width="630" height="252" rx="12" fill="url(#esp_pcb)" stroke="#020617" stroke-width="1.5"/>
+  <rect x="72" y="26" width="626" height="248" rx="11" fill="none" stroke="rgba(255,255,255,.12)"/>
+
+  <g fill="#0b1220" stroke="#334155" stroke-width="1.2">
+    <circle cx="96" cy="46" r="6"/>
+    <circle cx="676" cy="46" r="6"/>
+    <circle cx="96" cy="254" r="6"/>
+    <circle cx="676" cy="254" r="6"/>
+  </g>
+
+  <g id="esp_usb">
+    <rect x="14" y="118" width="70" height="52" rx="3" fill="url(#esp_usb)" stroke="#334155"/>
+    <rect x="28" y="130" width="42" height="28" rx="2" fill="#0f172a"/>
+    <rect x="36" y="138" width="26" height="12" rx="1" fill="#e2e8f0"/>
+  </g>
+
+  <g id="esp_en">
+    <rect x="98" y="58" width="20" height="20" rx="3" fill="#cbd5e1" stroke="#475569"/>
+    <circle cx="108" cy="68" r="6" fill="#dc2626"/>
+  </g>
+  <g id="esp_boot">
+    <rect x="98" y="200" width="20" height="20" rx="3" fill="#cbd5e1" stroke="#475569"/>
+    <circle cx="108" cy="210" r="6" fill="#334155"/>
+  </g>
+  <text x="108" y="92" text-anchor="middle" fill="#e5e7eb" font-family="Arial, Helvetica, sans-serif" font-size="8" font-weight="700">EN</text>
+  <text x="108" y="234" text-anchor="middle" fill="#e5e7eb" font-family="Arial, Helvetica, sans-serif" font-size="8" font-weight="700">BOOT</text>
+
+  <g id="esp_module">
+    <rect x="248" y="108" width="300" height="84" rx="3" fill="url(#esp_can)" stroke="#374151"/>
+    <rect x="258" y="118" width="210" height="64" rx="2" fill="#d1d5db" stroke="#6b7280"/>
+    <text x="363" y="146" text-anchor="middle" fill="#111827" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="700">ESP32-WROOM-32</text>
+    <text x="363" y="164" text-anchor="middle" fill="#374151" font-family="Arial, Helvetica, sans-serif" font-size="9">DevKit V1</text>
+    <path d="M548 140 h28 a16 16 0 0 1 0 20 h-28" fill="none" stroke="#d97706" stroke-width="3"/>
+    <path d="M556 148 h16 a8 8 0 0 1 0 12 h-16" fill="none" stroke="#fbbf24" stroke-width="2"/>
+  </g>
+
+  <text x="400" y="102" text-anchor="middle" fill="#f8fafc" font-family="Arial, Helvetica, sans-serif" font-size="16" font-weight="800" letter-spacing="1">ESP32</text>
+
+  <rect x="150" y="36" width="530" height="18" rx="1" fill="url(#esp_hdr)" stroke="#020617"/>
+  <rect x="150" y="246" width="530" height="18" rx="1" fill="url(#esp_hdr)" stroke="#020617"/>
+
+  <g fill="#020617">
+    <rect x="163" y="40" width="10" height="10"/><rect x="197" y="40" width="10" height="10"/><rect x="231" y="40" width="10" height="10"/>
+    <rect x="265" y="40" width="10" height="10"/><rect x="299" y="40" width="10" height="10"/><rect x="333" y="40" width="10" height="10"/>
+    <rect x="367" y="40" width="10" height="10"/><rect x="401" y="40" width="10" height="10"/><rect x="435" y="40" width="10" height="10"/>
+    <rect x="469" y="40" width="10" height="10"/><rect x="503" y="40" width="10" height="10"/><rect x="537" y="40" width="10" height="10"/>
+    <rect x="571" y="40" width="10" height="10"/><rect x="605" y="40" width="10" height="10"/><rect x="639" y="40" width="10" height="10"/>
+    <rect x="163" y="250" width="10" height="10"/><rect x="197" y="250" width="10" height="10"/><rect x="231" y="250" width="10" height="10"/>
+    <rect x="265" y="250" width="10" height="10"/><rect x="299" y="250" width="10" height="10"/><rect x="333" y="250" width="10" height="10"/>
+    <rect x="367" y="250" width="10" height="10"/><rect x="401" y="250" width="10" height="10"/><rect x="435" y="250" width="10" height="10"/>
+    <rect x="469" y="250" width="10" height="10"/><rect x="503" y="250" width="10" height="10"/><rect x="537" y="250" width="10" height="10"/>
+    <rect x="571" y="250" width="10" height="10"/><rect x="605" y="250" width="10" height="10"/><rect x="639" y="250" width="10" height="10"/>
+  </g>
+
+  <g fill="#f8fafc" font-family="Arial, Helvetica, sans-serif" font-size="8" font-weight="700" text-anchor="middle">
+    <text x="168" y="68">3V3</text><text x="202" y="68">GND</text><text x="236" y="68">15</text>
+    <text x="270" y="68">2</text><text x="304" y="68">4</text><text x="338" y="68">16</text>
+    <text x="372" y="68">17</text><text x="406" y="68">5</text><text x="440" y="68">18</text>
+    <text x="474" y="68">19</text><text x="508" y="68">21</text><text x="542" y="68">RX</text>
+    <text x="576" y="68">TX</text><text x="610" y="68">22</text><text x="644" y="68">23</text>
+    <text x="168" y="240">VIN</text><text x="202" y="240">GND</text><text x="236" y="240">13</text>
+    <text x="270" y="240">12</text><text x="304" y="240">14</text><text x="338" y="240">27</text>
+    <text x="372" y="240">26</text><text x="406" y="240">25</text><text x="440" y="240">33</text>
+    <text x="474" y="240">32</text><text x="508" y="240">35</text><text x="542" y="240">34</text>
+    <text x="576" y="240">VN</text><text x="610" y="240">VP</text><text x="644" y="240">EN</text>
+  </g>
+</svg>

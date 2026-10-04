@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Student account</title>
+<link rel="stylesheet" href="../css/platform.css">
+</head>
+<body data-depth="1">
+<header class="site-header"></header>
+<main>
+  <div class="page-head">
+    <h1>Student account</h1>
+    <p class="lede">Hello, <span id="hello">Student</span>. Signed-in progress is stored on the server.</p>
+  </div>
+  <section class="panel" id="auth-panel"></section>
+  <section class="panel" style="margin-top:12px">
+    <h2>Profile</h2>
+    <form id="student-form" class="form">
+      <input id="student-name" type="text" name="name" placeholder="Student name" autocomplete="name">
+      <button class="btn" type="submit">Save</button>
+    </form>
+  </section>
+  <section class="panel" style="margin-top:12px">
+    <h2>Learning points</h2>
+    <p class="lede" id="learn-xp">0 XP</p>
+  </section>
+  <section class="panel" style="margin-top:12px">
+    <h2>Progress</h2>
+    <div id="progress-list"></div>
+  </section>
+  <section class="panel" style="margin-top:12px">
+    <h2>Certificates</h2>
+    <div class="certs" id="certificates"></div>
+  </section>
+</main>
+<script src="../js/sync.js"></script>
+<script src="../js/platform.js"></script>
+</body>
+</html>

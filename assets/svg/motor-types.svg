@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 150">
+  <rect width="300" height="150" rx="14" fill="#0f172a"/>
+  <g font-family="Segoe UI, sans-serif" font-size="13" fill="#e2e8f0" text-anchor="middle">
+    <text x="55" y="28">DC motor</text>
+    <text x="150" y="28">Servo</text>
+    <text x="245" y="28">Stepper</text>
+  </g>
+  <circle cx="55" cy="88" r="28" fill="#1e293b" stroke="#38bdf8" stroke-width="3"/>
+  <path d="M55 70 a18 18 0 0 1 16 10" fill="none" stroke="#6ee7b7" stroke-width="3" stroke-linecap="round"/>
+  <rect x="118" y="68" width="64" height="40" rx="6" fill="#1e293b" stroke="#f59e0b" stroke-width="3"/>
+  <path d="M150 68 L164 48" stroke="#f8fafc" stroke-width="4" stroke-linecap="round"/>
+  <g fill="none" stroke="#a78bfa" stroke-width="3">
+    <circle cx="245" cy="88" r="26"/>
+    <path d="M245 62 v10 M245 104 v10 M219 88 h10 M261 88 h10"/>
+  </g>
+</svg>

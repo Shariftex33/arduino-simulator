@@ -1,0 +1,296 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 540 400" width="100%" height="100%" id="arduino_uno" xmlns:c2pa="http://c2pa.org/manifest"><metadata><c2pa:manifest>AAAWgmp1bWIAAAAeanVtZGMycGEAEQAQgAAAqgA4m3EDYzJwYQAAABZcanVtYgAAAEdqdW1kYzJtYQARABCAAACqADibcQN1cm46YzJwYTpjZjI0OTBkNS0yYTI3LTQxNjQtYWI5NC0yY2YwMDc5NGVlMmYAAAADl2p1bWIAAAApanVtZGMyYXMAEQAQgAAAqgA4m3EDYzJwYS5hc3NlcnRpb25zAAAAALxqdW1iAAAARGp1bWRjYm9yABEAEIAAAKoAOJtxE2MycGEuaW5ncmVkaWVudC52MwAAAAAYYzJzaMNU4O7zLvKeDTpbopG3mmUAAABwY2JvcqNpZGM6Zm9ybWF0bWltYWdlL3N2Zyt4bWxqaW5zdGFuY2VJRHgseG1wOmlpZDpjZDlmMjAzNy03ODJiLTRmMzItYmJiYi1lZmMwODY5N2Y0NzRscmVsYXRpb25zaGlwaHBhcmVudE9mAAAB4mp1bWIAAABBanVtZGNib3IAEQAQgAAAqgA4m3ETYzJwYS5hY3Rpb25zLnYyAAAAABhjMnNohxXB24aAL2s6t+QZa0ufuQAAAZljYm9yomdhY3Rpb25zgqJmYWN0aW9ua2MycGEub3BlbmVkanBhcmFtZXRlcnOha2luZ3JlZGllbnRzgaJjdXJseC1zZWxmI2p1bWJmPWMycGEuYXNzZXJ0aW9ucy9jMnBhLmluZ3JlZGllbnQudjNkaGFzaFggnkjDb5JVUYKN16B+FLsdLus5nbVwRg76vrTWCd0vU52kZmFjdGlvbngdY29tLmFudGhyb3BpYy5jbGF1ZGUucHJvdmlkZWRqcGFyYW1ldGVyc6F4H2NvbS5hbnRocm9waWMub3JpZ2luLWNvbmZpZGVuY2VndW5rbm93bmtkZXNjcmlwdGlvbnhmQ2xhdWRlIHByb3ZpZGVkIHRoaXMgZmlsZSBhdCB0aGUgcmVxdWVzdCBvZiBhIHVzZXIgYW5kIG1heSBoYXZlIGNyZWF0ZWQgb3IgbW9kaWZpZWQgdGhlIGZpbGUgY29udGVudHMubXNvZnR3YXJlQWdlbnShZG5hbWVmQ2xhdWRlcmFsbEFjdGlvbnNJbmNsdWRlZPUAAADIanVtYgAAAEBqdW1kY2JvcgARABCAAACqADibcRNjMnBhLmhhc2guZGF0YQAAAAAYYzJzaPf9XAjYl16G5IdJhI77rKEAAACAY2JvcqVjYWxnZnNoYTI1NmNwYWRNAAAAAAAAAAAAAAAAAGRoYXNoWCDttizaPZNOQJZVbXHRUjBRj4SbiRSuPYYEVl7N8X6z72RuYW1lbmp1bWJmIG1hbmlmZXN0amV4Y2x1c2lvbnOBomVzdGFydBipZmxlbmd0aBkeBAAAAj5qdW1iAAAAJ2p1bWRjMmNsABEAEIAAAKoAOJtxA2MycGEuY2xhaW0udjIAAAACD2Nib3KlY2FsZ2ZzaGEyNTZpc2lnbmF0dXJleE1zZWxmI2p1bWJmPS9jMnBhL3VybjpjMnBhOmNmMjQ5MGQ1LTJhMjctNDE2NC1hYjk0LTJjZjAwNzk0ZWUyZi9jMnBhLnNpZ25hdHVyZWppbnN0YW5jZUlEeCx4bXA6aWlkOmI4ZmUzNTE2LTdlNzQtNGRjMi1iZjAyLTU5M2FhNzJlZmI2ZXJjcmVhdGVkX2Fzc2VydGlvbnODomN1cmx4LXNlbGYjanVtYmY9YzJwYS5hc3NlcnRpb25zL2MycGEuaW5ncmVkaWVudC52M2RoYXNoWCCeSMNvklVRgo3XoH4Uux0u6zmdtXBGDvq+tNYJ3S9TnaJjdXJseCpzZWxmI2p1bWJmPWMycGEuYXNzZXJ0aW9ucy9jMnBhLmFjdGlvbnMudjJkaGFzaFgg+izILOMGiUq5inB7y13Co75e2E4bVPtwNNeht2iKGJiiY3VybHgpc2VsZiNqdW1iZj1jMnBhLmFzc2VydGlvbnMvYzJwYS5oYXNoLmRhdGFkaGFzaFggMoNipCzS+cTGs9a6SlqVLTmb4DbwsoebAJGw9iE5sIZ0Y2xhaW1fZ2VuZXJhdG9yX2luZm+jZG5hbWVvQW50aHJvcGljIEZpbGVzZ3ZlcnNpb25lMS4wLjBrc3BlY1ZlcnNpb25lMi40LjAAABA4anVtYgAAAChqdW1kYzJjcwARABCAAACqADibcQNjMnBhLnNpZ25hdHVyZQAAABAIY2JvctKEWQISogEmGCFZAgowggIGMIIBjaADAgECAhRA5aAK7sI50L64g/oGQgU9Z1UTADAKBggqhkjOPQQDAzBJMRcwFQYDVQQKEw5BbnRocm9waWMsIFBCQzEuMCwGA1UEAxMlQW50aHJvcGljIENvbnRlbnQgQ3JlZGVudGlhbHMgUm9vdCBDQTAeFw0yNjA4MDcxODQzNTZaFw0yODA4MDYxOTQzNTZaMEQxFzAVBgNVBAoTDkFudGhyb3BpYywgUEJDMSkwJwYDVQQDEyBBbnRocm9waWMgQ2xhdWRlIENvbnRlbnQgU2lnbmluZzBZMBMGByqGSM49AgEGCCqGSM49AwEHA0IABJh6CmvLUBgFFNU0vUKlOVtE6djd17L5SuwX0LemFisBM3dkd/3cyjxFA3Qo5S46fX0/ihY0VZ7mfb9KF703t5OjWDBWMA4GA1UdDwEB/wQEAwIHgDAVBgNVHSUEDjAMBgorBgEEAYPoXgIBMAwGA1UdEwEB/wQCMAAwHwYDVR0jBBgwFoAUzlHiBIFOZFsj+OPEz5o+nMHXXMIwCgYIKoZIzj0EAwMDZwAwZAIwMXMdFJ4BetLLVY7ORuE9noqbbAZOZn/aArXyTwFAZfKrPzxF2vPoJNf1+UCdg1XGAjBwX1zd9WGqYkqmL5SFqw1QySjr1zJfpJM9+1rdDwSPLMOPOjKuiXjoU/pUUeG9RwmhY3BhZFkNngAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAPZYQJRNTolL4uNcPhhVLoB52nlQAX/voN4JSVqD+z/5IMbmu9IO0D1M2jEKlnBJUat0D4nr2bFggl3d4wxvlpi+NtE=</c2pa:manifest></metadata>
+  <defs>
+    <!-- PCB Blue Metallic Finish Gradient -->
+    <linearGradient id="uno_pcb_grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00839c"/>
+      <stop offset="40%" stop-color="#00647a"/>
+      <stop offset="100%" stop-color="#004d5e"/>
+    </linearGradient>
+
+    <!-- Metal USB Port Gradient -->
+    <linearGradient id="metal_dark_grad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#94a3b8"/>
+      <stop offset="20%" stop-color="#cbd5e1"/>
+      <stop offset="50%" stop-color="#64748b"/>
+      <stop offset="80%" stop-color="#475569"/>
+      <stop offset="100%" stop-color="#334155"/>
+    </linearGradient>
+
+    <linearGradient id="metal_shiny_grad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#64748b"/>
+      <stop offset="30%" stop-color="#e2e8f0"/>
+      <stop offset="50%" stop-color="#ffffff"/>
+      <stop offset="70%" stop-color="#cbd5e1"/>
+      <stop offset="100%" stop-color="#475569"/>
+    </linearGradient>
+
+    <!-- IC Plastic Gradient -->
+    <linearGradient id="ic_body_grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#334155"/>
+      <stop offset="50%" stop-color="#1e293b"/>
+      <stop offset="100%" stop-color="#0f172a"/>
+    </linearGradient>
+
+    <!-- Header Block Dark Plastic -->
+    <linearGradient id="header_block_grad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#475569"/>
+      <stop offset="30%" stop-color="#1e293b"/>
+      <stop offset="100%" stop-color="#0f172a"/>
+    </linearGradient>
+
+    <!-- LED Glow Filter -->
+    <filter id="led_glow_blur" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="3"/>
+    </filter>
+  </defs>
+
+  <!-- MAIN BOARD GROUP -->
+  <g id="uno_board">
+
+    <!-- PCB BASE SHAPE -->
+    <path id="uno_pcb" d="
+      M 60 40 
+      L 480 40 
+      A 10 10 0 0 1 490 50 
+      L 490 330 
+      A 10 10 0 0 1 480 340 
+      L 430 340 
+      L 420 350 
+      L 120 350 
+      L 110 340 
+      L 60 340 
+      A 10 10 0 0 1 50 330 
+      L 50 50 
+      A 10 10 0 0 1 60 40 
+      Z" 
+      fill="url(#uno_pcb_grad)" 
+      stroke="#003642" 
+      stroke-width="1.5"
+    />
+
+    <!-- PCB MOUNTING HOLES -->
+    <g id="mounting_holes" fill="#003642" stroke="#00839c" stroke-width="2">
+      <circle cx="120" cy="58" r="6"/>
+      <circle cx="470" cy="80" r="6"/>
+      <circle cx="470" cy="320" r="6"/>
+      <circle cx="130" cy="325" r="6"/>
+    </g>
+
+    <!-- HARDWARE COMPONENTS -->
+
+    <!-- USB Type-B Female Connector -->
+    <g id="uno_usb_port">
+      <rect x="20" y="65" width="75" height="60" rx="3" fill="url(#metal_dark_grad)" stroke="#1e293b" stroke-width="1"/>
+      <rect x="20" y="70" width="70" height="50" rx="2" fill="url(#metal_shiny_grad)"/>
+      <rect x="18" y="75" width="5" height="40" rx="1" fill="#475569"/>
+      <!-- Inner Connector Shield -->
+      <rect x="35" y="80" width="50" height="30" rx="2" fill="#0f172a"/>
+      <rect x="45" y="88" width="30" height="14" rx="1" fill="#e2e8f0"/>
+    </g>
+
+    <!-- DC Barrel Jack -->
+    <g id="uno_dc_jack">
+      <rect x="20" y="240" width="85" height="70" rx="4" fill="#0f172a" stroke="#000000" stroke-width="1"/>
+      <rect x="15" y="245" width="10" height="60" rx="2" fill="#1e293b"/>
+      <!-- Outer Metal Barrel Lip -->
+      <ellipse cx="20" cy="275" rx="4" ry="25" fill="url(#metal_dark_grad)"/>
+      <!-- Center Pin -->
+      <circle cx="55" cy="275" r="5" fill="url(#metal_shiny_grad)"/>
+    </g>
+
+    <!-- ATmega328P DIP IC & Socket -->
+    <g id="uno_microcontroller">
+      <!-- IC Socket Base -->
+      <rect x="235" y="225" width="190" height="55" rx="2" fill="#020617" stroke="#1e293b" stroke-width="1"/>
+      <!-- DIP Chip Body -->
+      <rect x="240" y="230" width="180" height="45" rx="2" fill="url(#ic_body_grad)" stroke="#475569" stroke-width="0.5"/>
+      <!-- Notch & Pin 1 Indicator -->
+      <path d="M 240 247 A 5 5 0 0 1 240 258 Z" fill="#0f172a"/>
+      <circle cx="252" cy="265" r="2.5" fill="#475569"/>
+      <!-- Silver Pins -->
+      <g fill="url(#metal_shiny_grad)">
+        <!-- Top Row Pins -->
+        <rect x="250" y="222" width="5" height="8" rx="1"/><rect x="262" y="222" width="5" height="8" rx="1"/>
+        <rect x="274" y="222" width="5" height="8" rx="1"/><rect x="286" y="222" width="5" height="8" rx="1"/>
+        <rect x="298" y="222" width="5" height="8" rx="1"/><rect x="310" y="222" width="5" height="8" rx="1"/>
+        <rect x="322" y="222" width="5" height="8" rx="1"/><rect x="334" y="222" width="5" height="8" rx="1"/>
+        <rect x="346" y="222" width="5" height="8" rx="1"/><rect x="358" y="222" width="5" height="8" rx="1"/>
+        <rect x="370" y="222" width="5" height="8" rx="1"/><rect x="382" y="222" width="5" height="8" rx="1"/>
+        <rect x="394" y="222" width="5" height="8" rx="1"/><rect x="406" y="222" width="5" height="8" rx="1"/>
+        <!-- Bottom Row Pins -->
+        <rect x="250" y="275" width="5" height="8" rx="1"/><rect x="262" y="275" width="5" height="8" rx="1"/>
+        <rect x="274" y="275" width="5" height="8" rx="1"/><rect x="286" y="275" width="5" height="8" rx="1"/>
+        <rect x="298" y="275" width="5" height="8" rx="1"/><rect x="310" y="275" width="5" height="8" rx="1"/>
+        <rect x="322" y="275" width="5" height="8" rx="1"/><rect x="334" y="275" width="5" height="8" rx="1"/>
+        <rect x="346" y="275" width="5" height="8" rx="1"/><rect x="358" y="275" width="5" height="8" rx="1"/>
+        <rect x="370" y="275" width="5" height="8" rx="1"/><rect x="382" y="275" width="5" height="8" rx="1"/>
+        <rect x="394" y="275" width="5" height="8" rx="1"/><rect x="406" y="275" width="5" height="8" rx="1"/>
+      </g>
+      <!-- Label Text -->
+      <text x="330" y="256" font-family="Arial, sans-serif" font-weight="bold" font-size="11" fill="#94a3b8" text-anchor="middle" letter-spacing="2">ATMEGA328P-PU</text>
+    </g>
+
+    <!-- 16MHz Crystal Oscillator -->
+    <g id="uno_crystal">
+      <rect x="180" y="210" width="30" height="14" rx="7" fill="url(#metal_shiny_grad)" stroke="#64748b" stroke-width="0.5"/>
+      <text x="195" y="220" font-family="Arial, sans-serif" font-size="6" fill="#334155" text-anchor="middle">16.000</text>
+    </g>
+
+    <!-- Reset Push Button -->
+    <g id="uno_reset_button">
+      <rect id="reset_button_base" x="70" y="170" width="28" height="28" rx="2" fill="#cbd5e1" stroke="#475569" stroke-width="1"/>
+      <g id="reset_button_cap">
+        <circle id="reset_cap_outer" cx="84" cy="184" r="8" fill="#b91c1c"/>
+        <circle id="reset_cap_inner" cx="84" cy="184" r="6" fill="#dc2626"/>
+      </g>
+      <rect id="arduino_uno_reset_button_hotspot" x="70" y="170" width="28" height="28" rx="2" fill="#5ec8ff" opacity="0"/>
+    </g>
+
+    <!-- STATUS LEDS -->
+    <g id="uno_leds">
+      <!-- ON LED (Green) -->
+      <g id="arduino_uno_led_on">
+        <rect x="420" y="120" width="6" height="10" rx="1" fill="#15803d"/>
+        <circle id="arduino_uno_led_on_glow" cx="423" cy="125" r="5" fill="#22c55e" opacity="0.9" filter="url(#led_glow_blur)"/>
+      </g>
+      <!-- Pin 13 "L" LED (Yellow) -->
+      <g id="arduino_uno_led_l">
+        <rect x="220" y="120" width="6" height="10" rx="1" fill="#a16207"/>
+        <circle id="arduino_uno_led_l_glow" cx="223" cy="125" r="5" fill="#eab308" opacity="0.0" filter="url(#led_glow_blur)"/>
+      </g>
+      <!-- TX LED (Yellow) -->
+      <g id="arduino_uno_led_tx">
+        <rect x="220" y="140" width="6" height="10" rx="1" fill="#a16207"/>
+        <circle id="arduino_uno_led_tx_glow" cx="223" cy="145" r="5" fill="#eab308" opacity="0.0" filter="url(#led_glow_blur)"/>
+      </g>
+      <!-- RX LED (Yellow) -->
+      <g id="arduino_uno_led_rx">
+        <rect x="220" y="155" width="6" height="10" rx="1" fill="#a16207"/>
+        <circle id="arduino_uno_led_rx_glow" cx="223" cy="160" r="5" fill="#eab308" opacity="0.0" filter="url(#led_glow_blur)"/>
+      </g>
+    </g>
+
+    <!-- SILKSCREEN LABELS & BRANDING -->
+    <g id="uno_silkscreen" fill="#ffffff" font-family="Arial, sans-serif" font-weight="bold">
+      <!-- Logo Branding -->
+      <text x="280" y="112" font-size="22" letter-spacing="1">ARDUINO</text>
+      <text x="280" y="134" font-size="18" fill="#cbd5e1">UNO</text>
+      
+      <!-- Top Digital Section Label -->
+      <text x="317" y="84" font-size="8" text-anchor="middle">DIGITAL (PWM~)</text>
+
+      <!-- Pin Number Silk Screen Labels (Top Row) -->
+      <g font-size="6" font-weight="normal" text-anchor="middle" fill="#ffffff">
+        <text x="159" y="72">SCL</text><text x="177" y="72">SDA</text>
+        <text x="195" y="72">AREF</text><text x="213" y="72">GND</text>
+        <text x="231" y="72">13</text><text x="249" y="72">12</text>
+        <text x="267" y="72">~11</text><text x="285" y="72">~10</text>
+        <text x="303" y="72">~9</text><text x="321" y="72">8</text>
+        <text x="349" y="72">7</text><text x="367" y="72">~6</text>
+        <text x="385" y="72">~5</text><text x="403" y="72">4</text>
+        <text x="421" y="72">~3</text><text x="439" y="72">2</text>
+        <text x="457" y="72">TX-1</text><text x="475" y="72">RX-0</text>
+      </g>
+
+      <!-- Bottom Section Labels -->
+      <text x="214" y="296" font-size="8" text-anchor="middle">POWER</text>
+      <text x="367" y="296" font-size="8" text-anchor="middle">ANALOG IN</text>
+
+      <!-- Pin Silk Screen Labels (Bottom Row) -->
+      <g font-size="6" font-weight="normal" text-anchor="middle" fill="#ffffff">
+        <text x="160" y="308" font-size="5">IOREF</text><text x="178" y="308" font-size="5">RESET</text>
+        <text x="196" y="308">3.3V</text><text x="214" y="308">5V</text>
+        <text x="232" y="308">GND</text><text x="250" y="308">GND</text>
+        <text x="268" y="308">VIN</text>
+
+        <text x="322" y="308">A0</text><text x="340" y="308">A1</text>
+        <text x="358" y="308">A2</text><text x="376" y="308">A3</text>
+        <text x="394" y="308">A4</text><text x="412" y="308">A5</text>
+      </g>
+    </g>
+
+    <!-- FEMALE PIN HEADERS & INTERACTIVE SNAP HOTSPOTS -->
+    
+    <!-- TOP DIGITAL HEADER BLOCK (18 PINS) -->
+    <g id="header_digital_block">
+      <rect x="150" y="45" width="334" height="20" rx="1" fill="url(#header_block_grad)" stroke="#0f172a" stroke-width="1"/>
+      
+      <!-- Individual Female Socket Slots + Hotspots -->
+      <!-- Pin SCL -->
+      <g id="arduino_uno_pin_scl"><rect x="154" y="49" width="10" height="12" fill="#0f172a"/><circle id="arduino_uno_pin_scl_hotspot" cx="159" cy="55" r="6" fill="#000000" opacity="0"/></g>
+      <!-- Pin SDA -->
+      <g id="arduino_uno_pin_sda"><rect x="172" y="49" width="10" height="12" fill="#0f172a"/><circle id="arduino_uno_pin_sda_hotspot" cx="177" cy="55" r="6" fill="#000000" opacity="0"/></g>
+      <!-- Pin AREF -->
+      <g id="arduino_uno_pin_aref"><rect x="190" y="49" width="10" height="12" fill="#0f172a"/><circle id="arduino_uno_pin_aref_hotspot" cx="195" cy="55" r="6" fill="#000000" opacity="0"/></g>
+      <!-- Pin GND 3 -->
+      <g id="arduino_uno_pin_gnd_3"><rect x="208" y="49" width="10" height="12" fill="#0f172a"/><circle id="arduino_uno_pin_gnd_3_hotspot" cx="213" cy="55" r="6" fill="#000000" opacity="0"/></g>
+      <!-- Pin 13 -->
+      <g id="arduino_uno_pin_13"><rect x="226" y="49" width="10" height="12" fill="#0f172a"/><circle id="arduino_uno_pin_13_hotspot" cx="231" cy="55" r="6" fill="#000000" opacity="0"/></g>
+      <!-- Pin 12 -->
+      <g id="arduino_uno_pin_12"><rect x="244" y="49" width="10" height="12" fill="#0f172a"/><circle id="arduino_uno_pin_12_hotspot" cx="249" cy="55" r="6" fill="#000000" opacity="0"/></g>
+      <!-- Pin 11 -->
+      <g id="arduino_uno_pin_11"><rect x="262" y="49" width="10" height="12" fill="#0f172a"/><circle id="arduino_uno_pin_11_hotspot" cx="267" cy="55" r="6" fill="#000000" opacity="0"/></g>
+      <!-- Pin 10 -->
+      <g id="arduino_uno_pin_10"><rect x="280" y="49" width="10" height="12" fill="#0f172a"/><circle id="arduino_uno_pin_10_hotspot" cx="285" cy="55" r="6" fill="#000000" opacity="0"/></g>
+      <!-- Pin 9 -->
+      <g id="arduino_uno_pin_9"><rect x="298" y="49" width="10" height="12" fill="#0f172a"/><circle id="arduino_uno_pin_9_hotspot" cx="303" cy="55" r="6" fill="#000000" opacity="0"/></g>
+      <!-- Pin 8 -->
+      <g id="arduino_uno_pin_8"><rect x="316" y="49" width="10" height="12" fill="#0f172a"/><circle id="arduino_uno_pin_8_hotspot" cx="321" cy="55" r="6" fill="#000000" opacity="0"/></g>
+      <!-- Pin 7 -->
+      <g id="arduino_uno_pin_7"><rect x="344" y="49" width="10" height="12" fill="#0f172a"/><circle id="arduino_uno_pin_7_hotspot" cx="349" cy="55" r="6" fill="#000000" opacity="0"/></g>
+      <!-- Pin 6 -->
+      <g id="arduino_uno_pin_6"><rect x="362" y="49" width="10" height="12" fill="#0f172a"/><circle id="arduino_uno_pin_6_hotspot" cx="367" cy="55" r="6" fill="#000000" opacity="0"/></g>
+      <!-- Pin 5 -->
+      <g id="arduino_uno_pin_5"><rect x="380" y="49" width="10" height="12" fill="#0f172a"/><circle id="arduino_uno_pin_5_hotspot" cx="385" cy="55" r="6" fill="#000000" opacity="0"/></g>
+      <!-- Pin 4 -->
+      <g id="arduino_uno_pin_4"><rect x="398" y="49" width="10" height="12" fill="#0f172a"/><circle id="arduino_uno_pin_4_hotspot" cx="403" cy="55" r="6" fill="#000000" opacity="0"/></g>
+      <!-- Pin 3 -->
+      <g id="arduino_uno_pin_3"><rect x="416" y="49" width="10" height="12" fill="#0f172a"/><circle id="arduino_uno_pin_3_hotspot" cx="421" cy="55" r="6" fill="#000000" opacity="0"/></g>
+      <!-- Pin 2 -->
+      <g id="arduino_uno_pin_2"><rect x="434" y="49" width="10" height="12" fill="#0f172a"/><circle id="arduino_uno_pin_2_hotspot" cx="439" cy="55" r="6" fill="#000000" opacity="0"/></g>
+      <!-- Pin 1 TX -->
+      <g id="arduino_uno_pin_1"><rect x="452" y="49" width="10" height="12" fill="#0f172a"/><circle id="arduino_uno_pin_1_hotspot" cx="457" cy="55" r="6" fill="#000000" opacity="0"/></g>
+      <!-- Pin 0 RX -->
+      <g id="arduino_uno_pin_0"><rect x="470" y="49" width="10" height="12" fill="#0f172a"/><circle id="arduino_uno_pin_0_hotspot" cx="475" cy="55" r="6" fill="#000000" opacity="0"/></g>
+    </g>
+
+    <!-- BOTTOM POWER HEADER BLOCK (8 PINS) -->
+    <g id="header_power_block">
+      <rect x="150" y="315" width="128" height="20" rx="1" fill="url(#header_block_grad)" stroke="#0f172a" stroke-width="1"/>
+      
+      <!-- Pin IOREF -->
+      <g id="arduino_uno_pin_ioref"><rect x="155" y="319" width="10" height="12" fill="#0f172a"/><circle id="arduino_uno_pin_ioref_hotspot" cx="160" cy="325" r="6" fill="#000000" opacity="0"/></g>
+      <!-- Pin RESET -->
+      <g id="arduino_uno_pin_reset"><rect x="173" y="319" width="10" height="12" fill="#0f172a"/><circle id="arduino_uno_pin_reset_hotspot" cx="178" cy="325" r="6" fill="#000000" opacity="0"/></g>
+      <!-- Pin 3V3 -->
+      <g id="arduino_uno_pin_3v3"><rect x="191" y="319" width="10" height="12" fill="#0f172a"/><circle id="arduino_uno_pin_3v3_hotspot" cx="196" cy="325" r="6" fill="#000000" opacity="0"/></g>
+      <!-- Pin 5V -->
+      <g id="arduino_uno_pin_5v"><rect x="209" y="319" width="10" height="12" fill="#0f172a"/><circle id="arduino_uno_pin_5v_hotspot" cx="214" cy="325" r="6" fill="#000000" opacity="0"/></g>
+      <!-- Pin GND 1 -->
+      <g id="arduino_uno_pin_gnd_1"><rect x="227" y="319" width="10" height="12" fill="#0f172a"/><circle id="arduino_uno_pin_gnd_1_hotspot" cx="232" cy="325" r="6" fill="#000000" opacity="0"/></g>
+      <!-- Pin GND 2 -->
+      <g id="arduino_uno_pin_gnd_2"><rect x="245" y="319" width="10" height="12" fill="#0f172a"/><circle id="arduino_uno_pin_gnd_2_hotspot" cx="250" cy="325" r="6" fill="#000000" opacity="0"/></g>
+      <!-- Pin VIN -->
+      <g id="arduino_uno_pin_vin"><rect x="263" y="319" width="10" height="12" fill="#0f172a"/><circle id="arduino_uno_pin_vin_hotspot" cx="268" cy="325" r="6" fill="#000000" opacity="0"/></g>
+    </g>
+
+    <!-- BOTTOM ANALOG HEADER BLOCK (6 PINS) -->
+    <g id="header_analog_block">
+      <rect x="312" y="315" width="110" height="20" rx="1" fill="url(#header_block_grad)" stroke="#0f172a" stroke-width="1"/>
+      
+      <!-- Pin A0 -->
+      <g id="arduino_uno_pin_a0"><rect x="317" y="319" width="10" height="12" fill="#0f172a"/><circle id="arduino_uno_pin_a0_hotspot" cx="322" cy="325" r="6" fill="#000000" opacity="0"/></g>
+      <!-- Pin A1 -->
+      <g id="arduino_uno_pin_a1"><rect x="335" y="319" width="10" height="12" fill="#0f172a"/><circle id="arduino_uno_pin_a1_hotspot" cx="340" cy="325" r="6" fill="#000000" opacity="0"/></g>
+      <!-- Pin A2 -->
+      <g id="arduino_uno_pin_a2"><rect x="353" y="319" width="10" height="12" fill="#0f172a"/><circle id="arduino_uno_pin_a2_hotspot" cx="358" cy="325" r="6" fill="#000000" opacity="0"/></g>
+      <!-- Pin A3 -->
+      <g id="arduino_uno_pin_a3"><rect x="371" y="319" width="10" height="12" fill="#0f172a"/><circle id="arduino_uno_pin_a3_hotspot" cx="376" cy="325" r="6" fill="#000000" opacity="0"/></g>
+      <!-- Pin A4 -->
+      <g id="arduino_uno_pin_a4"><rect x="389" y="319" width="10" height="12" fill="#0f172a"/><circle id="arduino_uno_pin_a4_hotspot" cx="394" cy="325" r="6" fill="#000000" opacity="0"/></g>
+      <!-- Pin A5 -->
+      <g id="arduino_uno_pin_a5"><rect x="407" y="319" width="10" height="12" fill="#0f172a"/><circle id="arduino_uno_pin_a5_hotspot" cx="412" cy="325" r="6" fill="#000000" opacity="0"/></g>
+    </g>
+
+  </g>
+</svg>

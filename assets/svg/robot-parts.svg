@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 150">
+  <rect width="300" height="150" rx="14" fill="#0f172a"/>
+  <g font-family="Segoe UI, sans-serif" font-size="13" fill="#e2e8f0" text-anchor="middle">
+    <rect x="16" y="36" width="60" height="44" rx="8" fill="#1e293b" stroke="#6ee7b7"/>
+    <text x="46" y="64">Brain</text>
+    <rect x="88" y="36" width="60" height="44" rx="8" fill="#1e293b" stroke="#38bdf8"/>
+    <text x="118" y="64">Driver</text>
+    <rect x="160" y="36" width="60" height="44" rx="8" fill="#1e293b" stroke="#f59e0b"/>
+    <text x="190" y="64">Motor</text>
+    <rect x="224" y="36" width="60" height="44" rx="8" fill="#1e293b" stroke="#f472b6"/>
+    <text x="254" y="64">Sensor</text>
+    <text x="150" y="118" fill="#94a3b8">battery feeds the motors</text>
+  </g>
+</svg>

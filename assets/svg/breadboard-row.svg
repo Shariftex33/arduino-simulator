@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 280 150">
+  <rect x="8" y="18" width="264" height="114" rx="10" fill="#f3e0b5" stroke="#c4a574"/>
+  <rect x="18" y="28" width="16" height="94" rx="4" fill="#fecaca"/>
+  <rect x="246" y="28" width="16" height="94" rx="4" fill="#bfdbfe"/>
+  <rect x="52" y="48" width="176" height="28" rx="6" fill="#fde68a" stroke="#d97706"/>
+  <g fill="#292524">
+    <circle cx="70" cy="62" r="5"/>
+    <circle cx="98" cy="62" r="5"/>
+    <circle cx="126" cy="62" r="5"/>
+    <circle cx="154" cy="62" r="5"/>
+    <circle cx="182" cy="62" r="5"/>
+    <circle cx="70" cy="100" r="5"/>
+    <circle cx="98" cy="100" r="5"/>
+    <circle cx="126" cy="100" r="5"/>
+    <circle cx="154" cy="100" r="5"/>
+    <circle cx="182" cy="100" r="5"/>
+  </g>
+  <text x="140" y="140" text-anchor="middle" fill="#44403c" font-family="Segoe UI, sans-serif" font-size="13">one row is already connected</text>
+</svg>

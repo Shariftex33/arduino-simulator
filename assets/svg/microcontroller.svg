@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 280">
+  <rect width="640" height="280" rx="16" fill="#0f172a"/>
+  <rect x="150" y="36" width="340" height="208" rx="18" fill="#115e59"/>
+  <text x="320" y="70" text-anchor="middle" fill="#ccfbf1" font-family="Segoe UI, sans-serif" font-size="18">Arduino board</text>
+  <rect x="230" y="90" width="180" height="110" rx="8" fill="#0f172a" stroke="#6ee7b7" stroke-width="3"/>
+  <text x="320" y="132" text-anchor="middle" fill="#6ee7b7" font-family="Segoe UI, sans-serif" font-size="20">ATmega328P</text>
+  <text x="320" y="162" text-anchor="middle" fill="#e2e8f0" font-family="Segoe UI, sans-serif" font-size="16">the microcontroller</text>
+  <text x="320" y="220" text-anchor="middle" fill="#94a3b8" font-family="Segoe UI, sans-serif" font-size="16">USB, regulator, and headers sit around it</text>
+</svg>

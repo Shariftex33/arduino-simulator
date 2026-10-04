@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Leaderboard</title>
+<link rel="stylesheet" href="../css/platform.css">
+</head>
+<body data-depth="1">
+<header class="site-header"></header>
+<main>
+  <div class="page-head">
+    <h1>Leaderboard</h1>
+    <p class="lede">Individual ranking by XP. A Plus or Classroom plan highlights your name.</p>
+  </div>
+  <section class="panel">
+    <p class="notice" id="board-status">Loading ranks…</p>
+    <table class="board-table">
+      <thead><tr><th>Rank</th><th>Name</th><th>XP</th><th>Streak</th><th>Plan</th></tr></thead>
+      <tbody id="board-body"></tbody>
+    </table>
+  </section>
+</main>
+<script src="../js/sync.js"></script>
+<script src="../js/platform.js"></script>
+<script>
+(function () {
+  function esc(value) {
+    return String(value).replace(/[&<>"]/g, function (ch) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch];
+    });
+  }
+  const status = document.getElementById('board-status');
+  const body = document.getElementById('board-body');
+  function load() {
+    return fetch('/api/leaderboard', {
+      headers: window.EduSync.token() ? { Authorization: 'Bearer ' + window.EduSync.token() } : {}
+    }).then(function (res) { return res.json(); }).then(function (data) {
+      const rows = data.leaders || [];
+      status.textContent = rows.length ? 'Top ' + rows.length + ' students.' : 'No scores yet. Finish a lesson while signed in.';
+      body.innerHTML = rows.map(function (row) {
+        const plan = row.plan === 'plus' || row.plan === 'classroom' ? '<strong>' + esc(row.name) + '</strong>' : esc(row.name);
+        return '<tr class="' + (row.you ? 'you' : '') + '"><td>' + row.rank + '</td><td>' + plan + '</td><td>' + row.xp + '</td><td>' + row.streak + '</td><td>' + esc(row.plan) + '</td></tr>';
+      }).join('');
+    }).catch(function () {
+      status.textContent = 'The leaderboard needs the server. Open this site from the Arduino Lab server.';
+    });
+  }
+  window.EduSync.hydrate().then(load, load);
+})();
+</script>
+</body>
+</html>

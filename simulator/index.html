@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Simulator</title>
+<link rel="stylesheet" href="../css/platform.css">
+</head>
+<body data-depth="1">
+<header class="site-header"></header>
+<main>
+  <div class="page-head">
+    <h1>Simulator</h1>
+    <p class="lede">Arduino Uno and ESP32 run in the circuit lab. Sensors, Motors, and Components open the parts that are already on that canvas.</p>
+  </div>
+  <div class="grid">
+    <article class="module">
+      <img class="thumb" src="../assets/svg/arduino-uno.svg?v=r3" alt="">
+      <h3>Arduino Uno</h3>
+      <p>Teal Uno board, wiring canvas, code, and serial monitor.</p>
+      <a class="btn" href="../arduino_simulator_v7.html">Open</a>
+    </article>
+    <article class="module">
+      <img class="thumb" src="../assets/svg/esp32-devkit.svg" alt="">
+      <h3>ESP32</h3>
+      <p>DevKit V1 board with GPIO headers, 3V3, VIN, and the onboard LED on GPIO2.</p>
+      <a class="btn" href="../arduino_simulator_v7.html?board=esp32">Open</a>
+    </article>
+    <article class="module">
+      <img class="thumb part" src="../assets/svg/hcsr04.svg" alt="">
+      <h3>Sensors</h3>
+      <p>HC-SR04, PIR, LDR, and DHT11, each with a ready circuit.</p>
+      <a class="btn" href="sensors/index.html">Open</a>
+    </article>
+    <article class="module">
+      <img class="thumb part" src="../assets/svg/servo.svg" alt="">
+      <h3>Motors</h3>
+      <p>Servo sweep and a fan whose speed follows a potentiometer.</p>
+      <a class="btn" href="motors/index.html">Open</a>
+    </article>
+    <article class="module">
+      <img class="thumb part" src="../assets/svg/led-red.svg" alt="">
+      <h3>Components</h3>
+      <p>Every palette part, grouped, each opening the project that uses it.</p>
+      <a class="btn" href="components/index.html">Open</a>
+    </article>
+  </div>
+
+  <h2 class="section-title" id="components">Components</h2>
+  <p class="lede">Open a part and its project loads in the lab. The same list lives on the Components page.</p>
+  <div id="component-catalog" data-root="../"></div>
+</main>
+<script src="../js/platform.js"></script>
+<script src="../js/components.js"></script>
+</body>
+</html>

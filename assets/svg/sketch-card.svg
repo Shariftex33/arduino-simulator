@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 140">
+  <rect width="240" height="140" rx="14" fill="#0f172a"/>
+  <rect x="10" y="10" width="220" height="120" rx="10" fill="#1e293b" stroke="#334155"/>
+  <text x="22" y="40" fill="#6ee7b7" font-family="Consolas, monospace" font-size="15">void setup() {</text>
+  <text x="36" y="66" fill="#f8fafc" font-family="Consolas, monospace" font-size="15">pinMode(13, OUTPUT);</text>
+  <text x="22" y="92" fill="#6ee7b7" font-family="Consolas, monospace" font-size="15">}</text>
+  <text x="22" y="116" fill="#94a3b8" font-family="Consolas, monospace" font-size="13">// runs once</text>
+</svg>

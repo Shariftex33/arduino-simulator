@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pricing</title>
+<link rel="stylesheet" href="../css/platform.css">
+</head>
+<body data-depth="1">
+<header class="site-header"></header>
+<main>
+  <div class="page-head">
+    <h1>Pricing</h1>
+    <p class="lede">Lessons stay free. Plus makes a certificate official. Classroom opens the teacher tools.</p>
+  </div>
+  <div class="columns" id="plan-list"></div>
+  <section class="panel" style="margin-top:14px">
+    <h2>Invoices</h2>
+    <p class="notice" id="invoice-status">Sign in to start a plan.</p>
+    <div id="invoice-list"></div>
+  </section>
+</main>
+<script src="../js/sync.js"></script>
+<script src="../js/platform.js"></script>
+<script>
+(function () {
+  function esc(value) {
+    return String(value == null ? '' : value).replace(/[&<>"]/g, function (ch) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch];
+    });
+  }
+  function money(cents) {
+    if (!cents) return 'Free';
+    return '$' + (cents / 100).toFixed(0) + '/mo';
+  }
+  const list = document.getElementById('plan-list');
+  const status = document.getElementById('invoice-status');
+  const invoices = document.getElementById('invoice-list');
+  function drawInvoices(data) {
+    const rows = (data && data.invoices) || [];
+    const pending = rows.find(function (row) { return row.status === 'pending'; });
+    status.textContent = pending
+      ? 'Invoice ' + pending.reference + ' is waiting for payment. Current plan: ' + (data.plan || 'free')
+      : (data && data.plan ? 'Current plan: ' + data.plan : 'Sign in to start a plan.');
+    invoices.innerHTML = rows.map(function (row) {
+      return '<div class="progress-row"><span>' + esc(row.reference) + '</span><span>' + esc(row.plan_id) + ' · ' + money(row.amount_cents) + '</span><span class="tag">' + esc(row.status) + '</span></div>';
+    }).join('');
+  }
+  function checkout(planId) {
+    if (!window.EduSync.token()) {
+      location.href = '../account/index.html';
+      return;
+    }
+    window.EduSync.request('/api/billing/checkout', { method: 'POST', body: { planId: planId } }).then(function (invoice) {
+      if (invoice.status === 'paid' || invoice.plan === 'free') location.reload();
+      else {
+        status.textContent = 'Invoice ' + invoice.reference + ' is pending. Confirm it after payment.';
+        return window.EduSync.request('/api/billing/invoices').then(drawInvoices);
+      }
+    }).catch(function (error) {
+      status.textContent = error.message || 'Checkout failed';
+    });
+  }
+  fetch('/api/plans').then(function (res) { return res.json(); }).then(function (data) {
+    list.innerHTML = (data.plans || []).map(function (plan) {
+      return '<article class="card"><h2>' + esc(plan.name) + '</h2><p class="price">' + money(plan.priceCents) + '</p><p>' + esc(plan.blurb) + '</p><p><button class="btn" type="button" data-plan="' + esc(plan.id) + '">Choose ' + esc(plan.name) + '</button></p></article>';
+    }).join('');
+    list.querySelectorAll('button').forEach(function (button) {
+      button.onclick = function () { checkout(button.dataset.plan); };
+    });
+  }).catch(function () {
+    list.innerHTML = '<p class="notice">Pricing needs the server.</p>';
+  });
+  window.EduSync.hydrate().then(function () {
+    if (!window.EduSync.token()) return;
+    return window.EduSync.request('/api/billing/invoices').then(drawInvoices);
+  });
+})();
+</script>
+</body>
+</html>

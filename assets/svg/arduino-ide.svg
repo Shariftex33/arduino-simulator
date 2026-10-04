@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 280">
+  <rect width="640" height="280" rx="16" fill="#0f172a"/>
+  <text x="32" y="48" fill="#e2e8f0" font-family="Segoe UI, sans-serif" font-size="22">Arduino IDE</text>
+  <g font-family="Segoe UI, sans-serif" font-size="18" text-anchor="middle">
+    <rect x="32" y="78" width="130" height="64" rx="10" fill="#064e3b" stroke="#6ee7b7"/>
+    <text x="97" y="116" fill="#6ee7b7">Verify</text>
+    <rect x="178" y="78" width="130" height="64" rx="10" fill="#1e3a8a" stroke="#93c5fd"/>
+    <text x="243" y="116" fill="#93c5fd">Upload</text>
+    <rect x="324" y="78" width="130" height="64" rx="10" fill="#1e293b" stroke="#fde68a"/>
+    <text x="389" y="116" fill="#fde68a">Board</text>
+    <rect x="470" y="78" width="130" height="64" rx="10" fill="#1e293b" stroke="#f9a8d4"/>
+    <text x="535" y="116" fill="#f9a8d4">Port</text>
+  </g>
+  <text x="32" y="190" fill="#94a3b8" font-family="Consolas, monospace" font-size="20">sketch.ino</text>
+  <text x="32" y="228" fill="#94a3b8" font-family="Segoe UI, sans-serif" font-size="18">Verify checks the code. Upload sends it through the port.</text>
+</svg>
