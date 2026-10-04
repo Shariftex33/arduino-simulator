@@ -782,12 +782,21 @@ header{position:sticky;top:0;z-index:50;padding:8px 14px}
 .status-pill.run i{background:#22c55e;box-shadow:0 0 8px #22c55e;animation:pl 1s infinite}
 .status-pill.err i{background:var(--err)}
 @keyframes pl{50%{opacity:.35}}
-details.menu{position:relative}
+.header-start{display:flex;align-items:center;gap:12px;min-width:0;flex:1 1 auto}
+details.menu{position:relative;flex:0 0 auto}
 details.menu summary{list-style:none;cursor:pointer;padding:6px 12px;border:1px solid var(--card-border);border-radius:6px;background:var(--card)}
 details.menu summary::-webkit-details-marker{display:none}
-.menu-list{position:absolute;right:0;top:110%;z-index:60;background:var(--card);border:1px solid var(--card-border);border-radius:10px;padding:6px;display:flex;flex-direction:column;gap:2px;min-width:260px;box-shadow:0 12px 30px rgba(0,0,0,.4)}
+.menu-list{position:absolute;left:0;right:auto;top:110%;z-index:60;background:var(--card);border:1px solid var(--card-border);border-radius:10px;padding:6px;display:flex;flex-direction:column;gap:2px;min-width:280px;box-shadow:0 12px 30px rgba(0,0,0,.4)}
 .menu-list button{text-align:left;border:none;background:transparent}
 .menu-list button:hover{background:rgba(16,185,129,.15)}
+.menu-rule{height:1px;margin:4px 2px;background:var(--card-border);border:0}
+.menu-note{font-size:12px;color:var(--tx-muted);padding:4px 8px}
+.project-name{display:block;font-size:12px;font-weight:700;color:var(--tx-muted)}
+.serial-tools{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.serial-tools label{font-size:11px;color:var(--tx-muted);display:inline-flex;gap:4px;align-items:center}
+.serial-tools button,.serial-tools span{font-size:11px}
+dialog .dlg-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+dialog .dlg-actions button{flex:1}
 .img-menu{position:fixed;z-index:80;min-width:260px;background:var(--card);border:1px solid var(--card-border);border-radius:10px;padding:6px;display:flex;flex-direction:column;gap:2px;box-shadow:0 12px 30px rgba(0,0,0,.45)}
 .img-menu button{text-align:left;border:none;background:transparent;color:var(--tx)}
 .img-menu button:hover{background:rgba(16,185,129,.15)}
@@ -1521,13 +1530,30 @@ button.pir-dome.svg-pir.active { background: none; box-shadow: none; border: non
 <body data-module="simulator/arduino-uno">
 
 <header>
+  <div class="header-start">
+    <details class="menu" id="file-menu"><summary>☰ File</summary><div class="menu-list">
+      <button type="button" onclick="newFirstProject()">📄 New Project (LED Blink)</button>
+      <button type="button" onclick="newProject()">◻ Empty Project (Arduino only)</button>
+      <hr class="menu-rule">
+      <button type="button" onclick="saveAsProject()">💾 Save As…</button>
+      <div id="recent-list"></div>
+      <hr class="menu-rule">
+      <button onclick="saveProject()">💾 Download Project (JSON)</button>
+      <button onclick="$('load-file-input').click()">📂 Load Project</button>
+      <button onclick="downloadInoCode()">📥 Download .ino</button>
+      <button type="button" onclick="saveCircuitImage(true)">🖼 Save Image with Background</button>
+      <button type="button" onclick="saveCircuitImage(false)">🖼 Save Image without Background</button>
+      <button onclick="toggleTheme()">🌓 Dark / Light Theme</button>
+      <button onclick="$('help-dlg').showModal()">❓ Help and Shortcuts</button>
+    </div></details>
     <div class="brand">
     <a class="platform-link" href="index.html">Platform</a>
     <a class="platform-link" id="back-lesson" hidden href="learning/lessons/index.html">Back to lesson</a>
     <div>
       <h1>Arduino Practical Simulator</h1>
-      <span style="font-size: 11px; color: var(--tx-muted);">Interactive Circuit, Tone Synth & C++ Engine</span>
+      <span id="project-name" class="project-name">Untitled</span>
     </div>
+  </div>
   </div>
 
   <div class="bar">
@@ -1603,16 +1629,6 @@ button.pir-dome.svg-pir.active { background: none; box-shadow: none; border: non
       <span id="speed-val">1x</span></div>
     <span class="status-pill" id="status-pill"><i></i><b id="status-txt">Stopped</b></span>
     <button onclick="restartRun()" title="Reset and run again">↻</button>
-    <details class="menu"><summary>☰ File</summary><div class="menu-list">
-      <button onclick="saveProject()">💾 Save Project (JSON)</button>
-      <button onclick="$('load-file-input').click()">📂 Load Project</button>
-      <button onclick="downloadInoCode()">📥 Download .ino</button>
-      <button type="button" onclick="saveCircuitImage(true)">🖼 Save Image with Background</button>
-      <button type="button" onclick="saveCircuitImage(false)">🖼 Save Image without Background</button>
-      <button onclick="newProject()">🗑 New Empty Project</button>
-      <button onclick="toggleTheme()">🌓 Dark / Light Theme</button>
-      <button onclick="$('help-dlg').showModal()">❓ Help and Shortcuts</button>
-    </div></details>
     <input type="file" id="load-file-input" accept=".json" style="display:none;" onchange="loadProject(event)">
   </div>
   </header>
@@ -1742,9 +1758,14 @@ button.pir-dome.svg-pir.active { background: none; box-shadow: none; border: non
       <textarea id="code-input" spellcheck="false" aria-label="Arduino Code Input" onkeydown="handleCodeTab(event)"></textarea>
       <div class="edge-drag edge-s" id="code-resize" role="separator" aria-orientation="horizontal" aria-label="Resize editor" title="Drag to resize editor"></div>
 
-      <div class="panel-title" style="border:none; padding:0;">
+      <div class="panel-title serial-tools" style="border:none; padding:0;">
         <span>Serial Monitor</span>
-        <button onclick="clearSerial()" style="font-size:11px; padding:2px 8px;">Clear</button>
+        <span id="serial-baud">baud not set</span>
+        <label><input id="serial-scroll" type="checkbox" checked> Autoscroll</label>
+        <label><input id="serial-time" type="checkbox" onchange="serialShowTime=this.checked"> Time</label>
+        <button type="button" id="serial-pause" onclick="toggleSerialPause()">Pause</button>
+        <button type="button" onclick="copySerial()">Copy</button>
+        <button type="button" onclick="clearSerial()">Clear</button>
       </div>
 
       <div class="serial-console">
@@ -1765,8 +1786,20 @@ button.pir-dome.svg-pir.active { background: none; box-shadow: none; border: non
 <li><b>Undo</b> / <b>Redo</b> (<kbd>Ctrl</kbd>+<kbd>Z</kbd>, <kbd>Ctrl</kbd>+<kbd>Y</kbd>) restores components, wires, the board, and code.</li>
 <li>Click a button component, or hold <kbd>Space</kbd> to press it.</li>
 <li>Moving a sensor slider changes its value while the simulation is running.</li>
+<li><b>File → New Project</b> opens LED Blink. <b>Empty Project</b> leaves only the Arduino board. If the current work has changed, you can keep it in Recent first. <b>Save As</b> names that copy. The panel layout stays as you left it.</li>
+<li>Run warns in the serial monitor when a pin has no wire, an LED has no resistor, or a part is on the wrong voltage. The baud rate is shown above the monitor. Pause, Copy, and Time leave the log in place. Clear is the only button that erases it.</li>
 <li>Your work is saved in the browser automatically. You can also download JSON, .ino, or a PNG (with or without the canvas background) from the File menu. Right-click the canvas for the same image options. A selection exports just those parts.</li></ol>
 <button class="btn-primary" onclick="$('help-dlg').close()">Got it</button></dialog>
+<dialog id="keep-dlg">
+  <h3 id="keep-title">Keep this project?</h3>
+  <p id="keep-text">Opening another project replaces the one on screen. You can keep this one in Recent.</p>
+  <input id="keep-name" type="text" placeholder="Project name" aria-label="Project name">
+  <div class="dlg-actions">
+    <button type="button" id="keep-save" class="btn-primary">Save and continue</button>
+    <button type="button" id="keep-discard">Continue without saving</button>
+    <button type="button" id="keep-cancel">Cancel</button>
+  </div>
+</dialog>
 <div id="img-menu" class="img-menu" hidden>
   <button type="button" id="img-with" onclick="saveCircuitImage(true)">Save image with background</button>
   <button type="button" id="img-plain" onclick="saveCircuitImage(false)">Save image without background</button>
@@ -1785,6 +1818,15 @@ let nextCompId = 1;
 let selectedPin = null;
 let pinStates = {};
 let serialInputQueue = [];
+let serialPaused = false;
+let serialBuffer = '';
+let serialShowTime = false;
+let serialBaud = 0;
+let labRunOk = false;
+let labActivity = false;
+let projectName = 'Untitled';
+let activeProjectId = '';
+let projectDirty = false;
 let scopeData = new Array(80).fill(0);
 let scopeAnimId = null;
 let executionStartTime = 0;
@@ -3243,6 +3285,7 @@ const __c = {
   bool:  v => (v ? 1 : 0)
 };
 const __arr = (n, a) => { const r = a.slice(); while (r.length < n) r.push(0); return r; };
+let lastSketchMap = [];
 
 function transpileArduinoCode(cppCode) {
   const lits = [];
@@ -3257,6 +3300,7 @@ function transpileArduinoCode(cppCode) {
     } else lits.push({ v: m });
     return `__S${lits.length - 1}__`;
   });
+  js = js.split('\n').map((line, i) => line + ' /*__L' + (i + 1) + '__*/').join('\n');
 
   // 2) preprocessor, F() macro, qualifiers, pointer stars
   js = js.replace(/^[ \t]*#include[^\n]*/gm, '');
@@ -3264,7 +3308,7 @@ function transpileArduinoCode(cppCode) {
   js = js.replace(/^[ \t]*#define[ \t]+(\w+)[ \t]*$/gm, 'var $1 = 1;');
   js = js.replace(/^[ \t]*#[^\n]*/gm, '');
   js = js.replace(/\bF\s*\(\s*(__S\d+__)\s*\)/g, '$1');
-  js = js.replace(/\b(?:static|volatile|extern|PROGMEM)\b\s*/g, '');
+  js = js.replace(/\b(?:static|volatile|extern|constexpr|const|PROGMEM)\b\s*/g, '');
   js = js.replace(new RegExp(`\\b(${__T})\\s*\\*\\s*(?=\\w)`, 'g'), '$1 ');
 
   // 3) library objects
@@ -3319,6 +3363,36 @@ function transpileArduinoCode(cppCode) {
       return `${t ? 'var ' : ''}${name} = __c.${k}(${rhs});`;
     });
 
+  // 9b) int a = 1, b = 2;  (step 9 leaves comma lists alone)
+  const splitDeclList = list => {
+    const parts = [];
+    let depth = 0, cur = '';
+    for (const ch of list) {
+      if (ch === '(' || ch === '[') depth++;
+      else if (ch === ')' || ch === ']') depth--;
+      if (ch === ',' && depth === 0) { parts.push(cur.trim()); cur = ''; }
+      else cur += ch;
+    }
+    if (cur.trim()) parts.push(cur.trim());
+    return parts;
+  };
+  js = js.replace(new RegExp(`(^|[;{}\\n])([ \\t]*)(${__T})[ \\t]+([^;{}\\n]+);`, 'gm'), (m, lead, sp, t, list) => {
+    if (!list.includes(',')) return m;
+    const k = __TYPE_CLASS[t.replace(/\s+/g, ' ')];
+    const parts = splitDeclList(list);
+    if (parts.length < 2) return m;
+    const rendered = [];
+    for (const part of parts) {
+      const eq = part.indexOf('=');
+      const left = (eq < 0 ? part : part.slice(0, eq)).trim();
+      const expr = eq < 0 ? '0' : part.slice(eq + 1).trim();
+      if (!/^[A-Za-z_]\w*$/.test(left)) return m;
+      varType[left] = k;
+      rendered.push(__c[k] ? `var ${left} = __c.${k}(${expr})` : `var ${left} = (${expr})`);
+    }
+    return lead + sp + rendered.join('; ') + ';';
+  });
+
   // 10) remaining C types -> var
   js = js.replace(new RegExp(`(?<![\\w.$])(?:const\\s+)?(?:${__T})(?![\\w$])`, 'g'), 'var');
 
@@ -3351,20 +3425,236 @@ function transpileArduinoCode(cppCode) {
     if (L.c !== undefined) return pre ? pre + JSON.stringify(L.s) : String(L.c);
     return (pre || '') + L.v;
   });
+  const map = [];
+  let last = 1;
+  js = js.split('\n').map(line => {
+    const mark = line.match(/\/\*__L(\d+)__\*\//);
+    if (mark) last = Number(mark[1]);
+    map.push(last);
+    return line.replace(/\s*\/\*__L\d+__\*\//g, '');
+  }).join('\n');
+  lastSketchMap = map;
   return js;
+}
+
+function braceDelta(line) {
+  let depth = 0, quote = '', esc = false;
+  for (const ch of line) {
+    if (quote) {
+      if (esc) { esc = false; continue; }
+      if (ch === '\\') { esc = true; continue; }
+      if (ch === quote) quote = '';
+      continue;
+    }
+    if (ch === '"' || ch === "'") { quote = ch; continue; }
+    if (ch === '{') depth++;
+    else if (ch === '}') depth--;
+  }
+  return depth;
+}
+
+function generatedErrorLine(js) {
+  const lines = String(js).split('\n');
+  let depth = 0, buf = '', lastOk = -1;
+  for (let i = 0; i < lines.length; i++) {
+    buf += lines[i] + '\n';
+    depth += braceDelta(lines[i]);
+    if (depth !== 0) continue;
+    try {
+      new Function('return (async () => {\n' + buf + '\n})();');
+      lastOk = i;
+    } catch (err) {
+      let hit = i;
+      for (let j = lastOk + 1; j <= i; j++) {
+        if (/const\s+var|\bvar\s+var\b|async function var/.test(lines[j])) { hit = j; break; }
+      }
+      return { index: hit, message: err.message || String(err) };
+    }
+  }
+  return null;
+}
+
+function arduinoHint(msg, lineText) {
+  const text = lineText || '';
+  if (/class\s+\w+/.test(text) || /\bpublic:|\bprivate:/.test(text)) return 'The lab does not run C++ classes. Use setup, loop, and plain functions.';
+  if (/::/.test(text)) return 'The lab does not run the :: operator. Call the function by its plain name.';
+  if (/Unexpected token 'var'|const\s+var/.test(msg)) return 'This declaration could not be read. Use const int name = value; or int a = 1, b = 2;';
+  if (/already been declared|Identifier '.+' has already been declared/i.test(msg)) return 'This name is declared twice. Keep one declaration.';
+  if (/is not defined/.test(msg)) {
+    const name = /([A-Za-z_]\w*) is not defined/.exec(msg);
+    return (name ? name[1] + ' is not declared in this sketch. ' : '') + 'Declare it above setup, or check the spelling.';
+  }
+  if (/Unexpected token|Unexpected identifier|Invalid or unexpected/.test(msg)) return 'This line uses syntax the lab does not support yet. Check the declaration, the braces, and the semicolon.';
+  return 'The sketch stopped here. ' + msg;
+}
+
+function explainSketchError(src, js, err) {
+  const srcLines = String(src).split('\n');
+  let index = -1;
+  const stack = String((err && err.stack) || '');
+  const fromStack = /<anonymous>:(\d+):/.exec(stack);
+  if (fromStack) {
+    const gen = Number(fromStack[1]) - 2;
+    if (gen > 0 && lastSketchMap[gen - 1]) index = lastSketchMap[gen - 1] - 1;
+  }
+  if (index < 0) {
+    const found = generatedErrorLine(js);
+    if (found && lastSketchMap[found.index]) index = lastSketchMap[found.index] - 1;
+  }
+  const lineNo = index >= 0 ? index + 1 : 0;
+  const text = lineNo ? String(srcLines[index] || '').trim() : '';
+  const hint = arduinoHint(String((err && err.message) || err), text);
+  const where = lineNo ? 'Line ' + lineNo + (text ? ': ' + text : '') : 'The sketch';
+  return '[Code error] ' + where + '\n' + hint;
 }
 /* ===== end transpiler ===== */
 
+function focusSketchLine(line) {
+  const box = $('code-input');
+  if (!box || !line) return;
+  const lines = box.value.split('\n');
+  let start = 0;
+  for (let i = 0; i < line - 1 && i < lines.length; i++) start += lines[i].length + 1;
+  const end = start + (lines[line - 1] ? lines[line - 1].length : 0);
+  box.focus();
+  box.setSelectionRange(start, end);
+}
+
+function sketchPinValues(code) {
+  const clean = String(code).replace(/\/\*[\s\S]*?\*\//g, ' ').replace(/\/\/[^\n]*/g, '');
+  const values = { A0: 'A0', A1: 'A1', A2: 'A2', A3: 'A3', A4: 'A4', A5: 'A5', LED_BUILTIN: boardId === 'esp32' ? '2' : '13' };
+  const pending = [];
+  const decl = /(?:static\s+)?(?:const\s+)?(?:int|byte|char)\s+(\w+)\s*=\s*([A-Za-z_]\w*|\d+)\s*;/g;
+  let match;
+  while ((match = decl.exec(clean))) pending.push([match[1], match[2]]);
+  for (let pass = 0; pass < 4; pass++) {
+    pending.forEach(([name, raw]) => {
+      if (/^\d+$/.test(raw)) values[name] = raw;
+      else if (values[raw]) values[name] = values[raw];
+    });
+  }
+  return values;
+}
+
+function resolveSketchPin(token, values) {
+  if (/^\d+$/.test(token)) return token;
+  return values[token] || '';
+}
+
+function signalAdj() {
+  const adj = new Map();
+  const link = (a, b) => {
+    if (!a || !b || a === b) return;
+    if (!adj.has(a)) adj.set(a, []);
+    if (!adj.has(b)) adj.set(b, []);
+    adj.get(a).push(b);
+    adj.get(b).push(a);
+  };
+  for (const w of wires) link(endpointNode(w.from), endpointNode(w.to));
+  link('a:GND', 'a:GND2');
+  link('a:GND', 'a:GND3');
+  return adj;
+}
+
+function walkSignal(start, adj) {
+  const seen = new Set();
+  const queue = [start];
+  while (queue.length) {
+    const node = queue.pop();
+    if (!node || seen.has(node)) continue;
+    seen.add(node);
+    const next = adj.get(node);
+    if (next) next.forEach(item => queue.push(item));
+  }
+  return seen;
+}
+
+function circuitWarnings(code) {
+  const warnings = [];
+  const values = sketchPinValues(code);
+  const clean = String(code).replace(/\/\*[\s\S]*?\*\//g, ' ').replace(/\/\/[^\n]*/g, '');
+  const onboard = boardId === 'esp32' ? '2' : '13';
+  const inputOnly = new Set(['34', '35', '36', '39']);
+  const seenPins = new Set();
+  const modeRe = /pinMode\s*\(\s*([A-Za-z_]\w*|\d+)\s*,\s*(OUTPUT|INPUT|INPUT_PULLUP)\s*\)/g;
+  let match;
+  while ((match = modeRe.exec(clean))) {
+    const pin = resolveSketchPin(match[1], values);
+    if (!pin || seenPins.has(pin)) continue;
+    seenPins.add(pin);
+    if (pin === onboard) continue;
+    const touched = walkSignal('a:' + pin, signalAdj());
+    if (touched.size < 2) warnings.push('Pin ' + pin + ' is ' + match[2] + ' in the sketch, and nothing is wired to it.');
+  }
+  if (boardId === 'esp32') {
+    const driveRe = /(?:pinMode\s*\(\s*([A-Za-z_]\w*|\d+)\s*,\s*OUTPUT\s*\)|(?:digitalWrite|analogWrite)\s*\(\s*([A-Za-z_]\w*|\d+)\s*,)/g;
+    const flagged = new Set();
+    while ((match = driveRe.exec(clean))) {
+      const pin = resolveSketchPin(match[1] || match[2], values);
+      if (!pin || !inputOnly.has(pin) || flagged.has(pin)) continue;
+      flagged.add(pin);
+      warnings.push('GPIO' + pin + ' on the ESP32 can only be an input. Do not use it as an output.');
+    }
+  }
+  const adj = signalAdj();
+  const resistorNodes = new Set();
+  components.forEach(part => {
+    if (part.type !== 'res') return;
+    resistorNodes.add(endpointNode({ type: 'comp', pinId: part.id + '-A' }));
+    resistorNodes.add(endpointNode({ type: 'comp', pinId: part.id + '-B' }));
+  });
+  const supply = id => id === 'a:5V' || id === 'a:3V3' || id === 'a:VIN' || id === 'a:IOREF';
+  const signalPin = id => /^a:(?:\d+|A[0-5])$/.test(id);
+  components.forEach(part => {
+    if (!/^led_/.test(part.type)) return;
+    const anode = endpointNode({ type: 'comp', pinId: part.id + '-ANODE' });
+    const seen = walkSignal(anode, adj);
+    let throughResistor = false;
+    let powered = false;
+    seen.forEach(id => {
+      if (resistorNodes.has(id)) throughResistor = true;
+      if (supply(id) || signalPin(id)) powered = true;
+    });
+    if (powered && !throughResistor) warnings.push('An LED is tied to power or a pin with no resistor in the path.');
+  });
+  const vccParts = { servo: 'VCC', ultrasonic: 'VCC', dht: 'VCC', pir: 'VCC', relay: 'VCC', ldr: 'VCC', soil: 'VCC', pot: 'VCC', lcd: 'VCC', oled: 'VCC' };
+  const wants5 = new Set(['servo', 'ultrasonic']);
+  components.forEach(part => {
+    const pin = vccParts[part.type];
+    if (!pin) return;
+    const seen = walkSignal(endpointNode({ type: 'comp', pinId: part.id + '-' + pin }), adj);
+    const name = (PART_NAMES[part.type] || part.type);
+    let onGnd = false, on5 = false, on33 = false;
+    seen.forEach(id => {
+      if (id === 'a:GND' || id === 'a:GND2' || id === 'a:GND3') onGnd = true;
+      if (id === 'a:5V' || id === 'a:VIN' || id === 'a:IOREF') on5 = true;
+      if (id === 'a:3V3') on33 = true;
+    });
+    if (onGnd && !on5 && !on33) warnings.push(name + ' power is tied to GND.');
+    else if (boardId === 'esp32' && on5) warnings.push('ESP32 pins are 3.3 V. ' + name + ' power is tied to 5V or VIN.');
+    else if (boardId !== 'esp32' && wants5.has(part.type) && on33 && !on5) warnings.push(name + ' is powered from 3.3V. On the Uno it expects 5V.');
+  });
+  return warnings.slice(0, 6);
+}
+
 async function startExecution() {
   isRunning = true;
+  labRunOk = false;
+  labActivity = false;
+  serialPaused = false;
+  serialBuffer = '';
+  const pauseBtn = $('serial-pause');
+  if (pauseBtn) pauseBtn.textContent = 'Pause';
   serialInputQueue = [];
   executionStartTime = Date.now();
   vtime = 0; __wake = null; __lastYield = performance.now(); __runId++;
   pinStates = {}; document.querySelectorAll('.pin-node.active-high').forEach(p => p.classList.remove('active-high'));
-  $('serial-out').innerText = '-- Sketch started --\n';
-  
+  if (typeof setBaudLabel === 'function') setBaudLabel(0);
+
   const rawCode = $('code-input').value;
+  const warnings = circuitWarnings(rawCode);
   const jsCode = transpileArduinoCode(rawCode);
+  $('serial-out').innerText = '-- Sketch started --\n' + (warnings.length ? warnings.map(w => '[Circuit] ' + w).join('\n') + '\n' : '');
 
   try {
     const wrappedCode = `
@@ -3375,7 +3665,7 @@ async function startExecution() {
         await __delay(10);
       }
     `;
-    
+
     const env = {
       __pinMode, __digitalWrite, __digitalRead, __analogWrite, __analogRead,
       __tone, __noTone, __delay, __delayMicro, __pulseIn, __serialBegin, __serialPrint, __serialPrintln,
@@ -3392,19 +3682,26 @@ async function startExecution() {
     };
     const names = Object.keys(env);
     const runFunc = new Function(...names, `return (async () => { ${wrappedCode} })();`);
-
+    labRunOk = true;
     startScopeAnimation();
-
     await runFunc(...names.map(k => env[k]));
   } catch (err) {
     if (isRunning && err.message !== "Execution Stopped") {
-      $('serial-out').innerText += `\n[Code error] ${err.message}`;
+      labRunOk = false;
+      const explained = explainSketchError(rawCode, jsCode, err);
+      $('serial-out').innerText += '\n' + explained + '\n';
+      const lineNo = Number((/^\[Code error\] Line (\d+)/m.exec(explained) || [])[1] || 0);
+      focusSketchLine(lineNo);
+      const info = $('code-info');
+      if (info) info.innerText = lineNo ? 'Error on line ' + lineNo : 'See the serial monitor';
       stopExecution();
     }
   }
 }
 
 function stopExecution() {
+  if (labRunOk && typeof publishLabResult === 'function') publishLabResult(true);
+  labRunOk = false;
   isRunning = false;
   if (__wake) __wake();
   stopAllTones();
@@ -3623,12 +3920,38 @@ function __map(x, in_min, in_max, out_min, out_max) {
   return Math.round((x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min);
 }
 
+function setBaudLabel(baud) {
+  serialBaud = Number(baud) || 0;
+  const el = $('serial-baud');
+  if (el) el.textContent = serialBaud ? serialBaud + ' baud' : 'baud not set';
+}
+
 function __serialBegin(baud) {
+  setBaudLabel(baud);
   const tx = $('led-tx');
   if (tx) {
     tx.classList.add('on-tx');
     setTimeout(() => tx.classList.remove('on-tx'), 200);
   }
+}
+
+function stampSerial(text) {
+  if (!serialShowTime) return text;
+  const out = $('serial-out');
+  const atBreak = !out || !out.innerText || out.innerText.endsWith('\n');
+  const time = new Date().toLocaleTimeString();
+  const prefix = atBreak ? '[' + time + '] ' : '';
+  return prefix + String(text).replace(/\n(?!$)/g, '\n[' + time + '] ');
+}
+
+function __serialPrint(msg, base) {
+  const text = stampSerial(String(__fmt(msg, base)));
+  if (text) labActivity = true;
+  if (serialPaused) { serialBuffer += text; return; }
+  const out = $('serial-out');
+  if (!out) return;
+  out.innerText += text;
+  if ($('serial-scroll') && $('serial-scroll').checked) out.scrollTop = out.scrollHeight;
 }
 
 function __fmt(msg, base) {
@@ -3637,17 +3960,9 @@ function __fmt(msg, base) {
       const u = msg < 0 ? (msg >= -32768 ? msg & 0xFFFF : msg >>> 0) : msg;
       return u.toString(base).toUpperCase();
     }
-    return msg.toFixed(base);            // Serial.println(3.14159, 2) -> 3.14
+    return msg.toFixed(base);
   }
   return msg;
-}
-
-function __serialPrint(msg, base) {
-  const out = $('serial-out');
-  if (out) {
-    out.innerText += __fmt(msg, base);
-    out.scrollTop = out.scrollHeight;
-  }
 }
 
 function __serialPrintln(msg, base) {
@@ -5847,13 +6162,33 @@ function updateCounts(){
 }
 ['renderWires','renderComponents'].forEach(n=>{const o=window[n]; window[n]=function(){const r=o.apply(this,arguments); updateCounts(); return r;};});
 
-function newProject(){
-  if(!confirm('Clear all components, wires, and code and start a new project?')) return;
+function freshSerial() {
+  const out = $('serial-out');
+  if (out) out.innerText = '-- Arduino Serial Output Ready --\n';
+}
+function newFirstProject() {
+  if (!confirm('Open the first project (LED Blink)? The current circuit and code will be replaced.')) return;
+  freshSerial();
+  loadExample('blink');
+}
+function newProject() {
+  if (!confirm('Start an empty project with only the Arduino board? The current circuit and code will be replaced.')) return;
   histBatch(() => {
-    stopExecution(); clearWorkspace(); bbOn=false; applyBbPos();
-    $('code-input').value='void setup() {\n  \n}\n\nvoid loop() {\n  \n}\n';
-    $('example-select').value='';
+    stopExecution();
+    clearWorkspace();
+    bbOn = false;
+    applyBbPos();
+    setBoardOpen(true);
+    $('code-input').value = 'void setup() {\n  \n}\n\nvoid loop() {\n  \n}\n';
+    $('example-select').value = '';
+    $('code-input').dispatchEvent(new Event('input'));
   });
+  freshSerial();
+  try {
+    const url = new URL(location.href);
+    url.searchParams.delete('example');
+    history.replaceState(null, '', url.pathname + url.search);
+  } catch (e) {}
 }
 function copyCode(){
   navigator.clipboard.writeText($('code-input').value).then(()=>{$('copy-btn').innerText='✔ Copied';setTimeout(()=>$('copy-btn').innerText='📋 Copy',1500);}).catch(()=>{$('code-input').select();document.execCommand('copy');});
