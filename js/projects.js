@@ -88,15 +88,56 @@
     return '<a href="' + href(item) + '"><span><b>' + num + item.name + '</b><span class="project-note">' + item.text + '</span></span><span class="tag live">Open</span></a>';
   }
 
-  let html = '';
-  if (setName && SETS[setName]) {
-    html = '<div class="stack">' + SETS[setName].map(function (key) { return row(byKey[key]); }).join('') + '</div>';
-  } else {
-    const order = ['Lights', 'Controls', 'Sensors', 'Displays', 'Motion', 'Home', 'Boards'];
-    html = order.map(function (group) {
-      const items = ALL.filter(function (item) { return item.group === group; }).slice().sort(function (a, b) { return a.n - b.n; });
-      return '<h3 class="group-title">' + group + '</h3><div class="stack">' + items.map(row).join('') + '</div>';
+  const order = ['Lights', 'Controls', 'Sensors', 'Displays', 'Motion', 'Home', 'Boards'];
+
+  function grouped(items) {
+    return order.map(function (group) {
+      const rows = items.filter(function (item) { return item.group === group; }).slice().sort(function (a, b) { return a.n - b.n; });
+      if (!rows.length) return '';
+      return '<h3 class="group-title">' + group + '</h3><div class="stack">' + rows.map(row).join('') + '</div>';
     }).join('');
   }
-  host.innerHTML = html;
+
+  if (setName && SETS[setName]) {
+    host.innerHTML = '<div class="stack">' + SETS[setName].map(function (key) { return row(byKey[key]); }).filter(Boolean).join('') + '</div>';
+    return;
+  }
+
+  const search = document.getElementById('project-search');
+  const filters = document.getElementById('project-filters');
+  const count = document.getElementById('project-count');
+  let activeSet = '';
+
+  function paint() {
+    const q = search ? search.value.trim().toLowerCase() : '';
+    let items = ALL.slice();
+    if (activeSet && SETS[activeSet]) {
+      items = SETS[activeSet].map(function (key) { return byKey[key]; }).filter(Boolean);
+    }
+    if (q) {
+      items = items.filter(function (item) {
+        return (item.name + ' ' + item.text + ' ' + item.group).toLowerCase().indexOf(q) !== -1;
+      });
+    }
+    if (count) count.textContent = items.length + ' of ' + ALL.length + ' circuits';
+    if (!items.length) {
+      host.innerHTML = '<p class="lede">No circuit matches that search.</p>';
+      return;
+    }
+    host.innerHTML = activeSet
+      ? '<div class="stack">' + items.map(row).join('') + '</div>'
+      : grouped(items);
+  }
+
+  if (filters) {
+    filters.addEventListener('click', function (e) {
+      const btn = e.target.closest('[data-set]');
+      if (!btn) return;
+      activeSet = btn.dataset.set || '';
+      filters.querySelectorAll('.filter-btn').forEach(function (el) { el.classList.toggle('on', el === btn); });
+      paint();
+    });
+  }
+  if (search) search.addEventListener('input', paint);
+  paint();
 })();

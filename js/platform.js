@@ -44,30 +44,47 @@
     const header = document.querySelector('.site-header');
     if (!header) return;
     const root = prefix();
-    const links = [
-      ['Home', root + 'index.html'],
-      ['Simulator', root + 'simulator/index.html'],
-      ['Learning', root + 'learning/index.html'],
-      ['Projects', root + 'projects/index.html'],
-      ['Showcase', root + 'share/index.html'],
-      ['+ NEW PROJECT', root + 'share/new/index.html', 'nav-cta'],
-      ['Leaderboard', root + 'leaderboard/index.html'],
-      ['Teach', root + 'teach/index.html'],
-      ['Pricing', root + 'pricing/index.html'],
-      ['Account', root + 'account/index.html']
+    const primary = [
+      ['Learn', root + 'learning/index.html', 'learn'],
+      ['Simulator', root + 'simulator/index.html', 'simulator'],
+      ['Projects', root + 'projects/index.html', 'projects'],
+      ['Account', root + 'account/index.html', 'account']
+    ];
+    const more = [
+      ['Showcase', root + 'share/index.html', 'showcase'],
+      ['Leaderboard', root + 'leaderboard/index.html', 'leaderboard'],
+      ['Teach', root + 'teach/index.html', 'teach'],
+      ['Pricing', root + 'pricing/index.html', 'pricing']
     ];
     const here = location.pathname.replace(/\\/g, '/');
+    const section = navSection(here);
+    function linkHtml(item) {
+      const on = section === item[2];
+      const current = on ? ' aria-current="page"' : '';
+      return '<a' + (on ? ' class="active"' : '') + current + ' href="' + item[1] + '">' + item[0] + '</a>';
+    }
+    const moreOn = more.some(function (item) { return section === item[2]; });
     header.innerHTML =
-      '<a class="brand" href="' + root + 'index.html"><img src="' + root + 'assets/svg/arduino-uno.svg?v=r3" alt=""><span>Arduino Lab</span></a>' +
-      '<nav class="nav">' + links.map(function (item) {
-        const path = new URL(item[1], location.href).pathname.replace(/\\/g, '/');
-        const showcaseOpen = item[0] === 'Showcase' && /\/share\/index\.html$/.test(here);
-        const classes = [];
-        if (here === path || showcaseOpen) classes.push('active');
-        if (item[2]) classes.push(item[2]);
-        const active = classes.length ? ' class="' + classes.join(' ') + '"' : '';
-        return '<a' + active + ' href="' + item[1] + '">' + item[0] + '</a>';
-      }).join('') + lessonReturn() + '</nav>';
+      '<a class="brand" href="' + root + 'index.html"><img src="' + root + 'assets/svg/arduino-uno.svg?v=r3" alt="Arduino Uno"><span>Arduino Lab</span></a>' +
+      '<nav class="nav" aria-label="Main">' +
+      primary.map(linkHtml).join('') +
+      '<details class="nav-more"' + (moreOn ? ' open' : '') + '>' +
+      '<summary' + (moreOn ? ' class="active"' : '') + '>More</summary>' +
+      '<div class="nav-more-list">' + more.map(linkHtml).join('') + '</div>' +
+      '</details>' +
+      lessonReturn() + '</nav>';
+  }
+
+  function navSection(path) {
+    if (/\/learning\//.test(path)) return 'learn';
+    if (/\/simulator\//.test(path) || /arduino_simulator_v7\.html$/.test(path)) return 'simulator';
+    if (/\/projects\//.test(path)) return 'projects';
+    if (/\/account\//.test(path)) return 'account';
+    if (/\/share\//.test(path)) return 'showcase';
+    if (/\/leaderboard\//.test(path)) return 'leaderboard';
+    if (/\/teach\//.test(path)) return 'teach';
+    if (/\/pricing\//.test(path)) return 'pricing';
+    return '';
   }
 
   function lessonReturn() {
@@ -236,13 +253,20 @@
     const xpEl = document.getElementById('lab-xp');
     const streakEl = document.getElementById('lab-streak');
     const cont = document.getElementById('continue-learning');
+    const nextEl = document.getElementById('next-step');
     if (bar) bar.style.width = pct + '%';
     if (pctEl) pctEl.textContent = pct + '%';
     if (levelEl) levelEl.textContent = meta.levelName || 'Level 1 · Arduino Foundations';
+    if (nextEl) nextEl.textContent = meta.nextLabel || 'Meet Arduino · Concept, 1 of 4';
     if (xpEl) xpEl.textContent = (meta.xp || 0).toLocaleString() + ' XP';
     const streak = meta.streak || 0;
     if (streakEl) streakEl.textContent = streak + ' day streak';
     if (cont && meta.continueHref) cont.setAttribute('href', meta.continueHref);
+    if (cont) {
+      if (meta.continueLabel) cont.textContent = meta.continueLabel;
+      else if (meta.total && meta.done >= meta.total) cont.textContent = 'Review lessons';
+      else if (meta.done) cont.textContent = 'Continue';
+    }
     const codeLink = document.getElementById('code-challenge');
     const circuitLink = document.getElementById('circuit-challenge');
     if (codeLink && meta.predictHref) codeLink.setAttribute('href', meta.predictHref);

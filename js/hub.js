@@ -562,7 +562,7 @@
   function renderGallery(projects) {
     current = null;
     document.title = 'Showcase';
-    if ($('hub-switch')) $('hub-switch').innerHTML = '';
+    if ($('hub-switch')) $('hub-switch').innerHTML = '<a class="btn" href="new/index.html">New project</a>';
     $('hub-article').innerHTML = '<div class="project-grid">' + projects.map(function (project) {
       const social = socialOf(project.id);
       const respects = (project.respects || 0) + (social.respected ? 1 : 0);

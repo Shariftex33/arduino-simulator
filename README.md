@@ -21,7 +21,7 @@ Open `http://localhost:8080`.
 docker compose up --build
 ```
 
-The database lives in the `lab-data` volume. Change `BILLING_WEBHOOK_SECRET` before you accept real payments. After an invoice is created, confirm it with:
+The database lives in the `lab-data` volume. Copy that volume before you change the schema. SQL files in `server/migrations` run once, in filename order, when the server starts. Change `BILLING_WEBHOOK_SECRET` before you accept real payments. After an invoice is created, confirm it with:
 
 ```bash
 curl -X POST http://localhost:8080/api/billing/confirm \

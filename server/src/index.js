@@ -1,11 +1,14 @@
 import express from 'express';
 import { randomBytes, randomUUID, scryptSync, timingSafeEqual } from 'node:crypto';
+import { readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { db } from './db.js';
 import { LEVELS, PLANS, PROJECTS, PROJECT_SETS, levelById, planById } from './catalog.js';
+import { acceptProgress, dayKey, parseActivities, streakCount } from './activities.js';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
+const activities = parseActivities(readFileSync(path.join(root, 'js', 'learn.js'), 'utf8'));
 const app = express();
 app.disable('x-powered-by');
 app.use(express.json({ limit: '100kb' }));
@@ -31,38 +34,6 @@ function verifyPassword(password, stored) {
 
 function validEmail(email) {
   return typeof email === 'string' && email.length < 120 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-}
-
-function validActivity(id) {
-  return typeof id === 'string' && /^[A-Za-z0-9_.:-]{1,64}$/.test(id);
-}
-
-function clampXp(id, xp) {
-  const n = Number(xp);
-  if (!Number.isFinite(n) || n <= 0) return 0;
-  if (String(id).startsWith('lvl:')) return Math.min(250, Math.floor(n));
-  if (String(id).startsWith('cat:')) return Math.min(100, Math.floor(n));
-  return Math.min(50, Math.floor(n));
-}
-
-function dayKey(date) {
-  const y = date.getFullYear();
-  const m = String(date.getMonth() + 1).padStart(2, '0');
-  const d = String(date.getDate()).padStart(2, '0');
-  return y + '-' + m + '-' + d;
-}
-
-function streakCount(days) {
-  const set = new Set(days || []);
-  const cursor = new Date();
-  cursor.setHours(12, 0, 0, 0);
-  if (!set.has(dayKey(cursor))) cursor.setDate(cursor.getDate() - 1);
-  let n = 0;
-  while (set.has(dayKey(cursor))) {
-    n += 1;
-    cursor.setDate(cursor.getDate() - 1);
-  }
-  return n;
 }
 
 function publicUser(row) {
@@ -113,12 +84,8 @@ function issueCertificate(userId, activityId) {
 }
 
 function applySync(userId, body) {
-  const items = Array.isArray(body.items) ? body.items.slice(0, 200) : [];
-  const solved = Array.isArray(body.solved) ? body.solved.slice(0, 2000) : [];
-  const days = Array.isArray(body.days) ? body.days.slice(0, 4000) : [];
-  const existing = new Set(
-    db.prepare('SELECT activity_id FROM progress WHERE user_id = ?').all(userId).map(function (row) { return row.activity_id; })
-  );
+  const existing = db.prepare('SELECT activity_id FROM progress WHERE user_id = ?').all(userId).map(function (row) { return row.activity_id; });
+  const accepted = acceptProgress(activities, body || {}, existing, dayKey(new Date()));
   const insert = db.prepare('INSERT INTO progress (user_id, activity_id, xp, created_at) VALUES (?, ?, ?, ?)');
   const addXp = db.prepare('UPDATE users SET xp = xp + ? WHERE id = ?');
   const addDay = db.prepare('INSERT OR IGNORE INTO activity_days (user_id, day) VALUES (?, ?)');
@@ -126,36 +93,40 @@ function applySync(userId, body) {
 
   db.exec('BEGIN');
   try {
-    if (existing.size === 0) {
-      const imported = Math.floor(Number(body.xp) || 0);
-      if (imported > 0) {
-        db.prepare('UPDATE users SET xp = ? WHERE id = ? AND xp = 0').run(Math.min(imported, 500000), userId);
-      }
-    }
-    items.forEach(function (item) {
-      if (!item || !validActivity(item.id) || existing.has(item.id)) return;
-      const xp = clampXp(item.id, item.xp);
-      if (!xp) return;
-      insert.run(userId, item.id, xp, stamp);
-      addXp.run(xp, userId);
-      existing.add(item.id);
-      issueCertificate(userId, item.id);
+    accepted.grants.forEach(function (grant) {
+      insert.run(userId, grant.id, grant.xp, stamp);
+      addXp.run(grant.xp, userId);
+      issueCertificate(userId, grant.id);
     });
-    solved.forEach(function (id) {
-      if (!validActivity(id) || existing.has(id)) return;
-      insert.run(userId, id, 0, stamp);
-      existing.add(id);
-      issueCertificate(userId, id);
-    });
-    days.forEach(function (day) {
-      if (typeof day === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(day)) addDay.run(userId, day);
-    });
+    accepted.days.forEach(function (day) { addDay.run(userId, day); });
     db.exec('COMMIT');
   } catch (error) {
     db.exec('ROLLBACK');
     throw error;
   }
   return stateFor(userId);
+}
+
+function daysByUser(userIds) {
+  const grouped = {};
+  userIds.forEach(function (id) { grouped[id] = []; });
+  if (!userIds.length) return grouped;
+  const marks = userIds.map(function () { return '?'; }).join(',');
+  db.prepare('SELECT user_id, day FROM activity_days WHERE user_id IN (' + marks + ')').all(...userIds).forEach(function (row) {
+    grouped[row.user_id].push(row.day);
+  });
+  return grouped;
+}
+
+function countsByUser(table, userIds) {
+  const grouped = {};
+  userIds.forEach(function (id) { grouped[id] = 0; });
+  if (!userIds.length) return grouped;
+  const marks = userIds.map(function () { return '?'; }).join(',');
+  db.prepare('SELECT user_id, COUNT(*) AS n FROM ' + table + ' WHERE user_id IN (' + marks + ') GROUP BY user_id').all(...userIds).forEach(function (row) {
+    grouped[row.user_id] = row.n;
+  });
+  return grouped;
 }
 
 function readUser(req) {
@@ -261,13 +232,13 @@ app.post('/api/progress/sync', requireUser, function (req, res) {
 app.get('/api/leaderboard', function (req, res) {
   const me = readUser(req);
   const rows = db.prepare('SELECT id, name, xp, plan FROM users ORDER BY xp DESC, name ASC LIMIT 50').all();
+  const days = daysByUser(rows.map(function (row) { return row.id; }));
   const board = rows.map(function (row, index) {
-    const days = db.prepare('SELECT day FROM activity_days WHERE user_id = ?').all(row.id).map(function (day) { return day.day; });
     return {
       rank: index + 1,
       name: row.name,
       xp: row.xp,
-      streak: streakCount(days),
+      streak: streakCount(days[row.id]),
       plan: row.plan,
       you: Boolean(me && me.id === row.id)
     };
@@ -337,20 +308,22 @@ app.get('/api/classes/:id', requireUser, function (req, res) {
     JOIN users u ON u.id = e.user_id
     WHERE e.classroom_id = ?
     ORDER BY u.xp DESC, u.name ASC
-  `).all(classroom.id).map(function (student) {
-    const days = db.prepare('SELECT day FROM activity_days WHERE user_id = ?').all(student.id).map(function (row) { return row.day; });
-    const solved = db.prepare('SELECT COUNT(*) AS n FROM progress WHERE user_id = ?').get(student.id).n;
-    const certificates = db.prepare('SELECT COUNT(*) AS n FROM certificates WHERE user_id = ?').get(student.id).n;
+  `).all(classroom.id);
+  const ids = students.map(function (student) { return student.id; });
+  const days = daysByUser(ids);
+  const solved = countsByUser('progress', ids);
+  const certificates = countsByUser('certificates', ids);
+  const roster = students.map(function (student) {
     return {
       name: student.name,
       xp: student.xp,
-      streak: streakCount(days),
-      solved: solved,
-      certificates: certificates,
+      streak: streakCount(days[student.id]),
+      solved: solved[student.id],
+      certificates: certificates[student.id],
       plan: student.plan
     };
   });
-  res.json({ id: classroom.id, name: classroom.name, joinCode: classroom.join_code, roster: students });
+  res.json({ id: classroom.id, name: classroom.name, joinCode: classroom.join_code, roster: roster });
 });
 
 app.get('/api/billing/invoices', requireUser, function (req, res) {
@@ -418,6 +391,30 @@ app.post('/api/billing/confirm', function (req, res) {
   const invoice = activateInvoice(reference);
   if (!invoice) return res.status(404).json({ error: 'Invoice not found' });
   res.json({ reference: invoice.reference, status: invoice.status, plan: invoice.plan_id });
+});
+
+const simParts = [
+  'js/sim/workspace.js',
+  'js/sim/breadboard.js',
+  'js/sim/transpile.js',
+  'js/sim/clock.js',
+  'js/sim/signals.js',
+  'js/sim/chrome.js',
+  'js/sim/pins.js',
+  'js/sim/examples.js'
+];
+
+function simSource() {
+  return simParts.map(function (file) {
+    return readFileSync(path.join(root, file), 'utf8');
+  }).join('\n');
+}
+
+writeFileSync(path.join(root, 'js/sim/simulator.js'), simSource());
+
+app.get('/js/sim/simulator.js', function (_req, res) {
+  res.set('Cache-Control', 'no-cache');
+  res.type('application/javascript').send(simSource());
 });
 
 app.use(function (req, res, next) {

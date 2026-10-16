@@ -11,36 +11,19 @@
 <main>
   <div class="page-head">
     <h1>Projects</h1>
-    <p class="lede">Four builds, plus the 57 circuits already in the simulator. Open any row and that sketch loads with its wires.</p>
+    <p class="lede">Open a circuit and that sketch loads with its wires.</p>
   </div>
-  <div class="grid">
-    <article class="module">
-      <img class="thumb part" src="../assets/svg/servo.svg" alt="">
-      <h3>Build Robot</h3>
-      <p>Servo, fan, and distance circuits for a small robot.</p>
-      <a class="btn" href="build-robot/index.html">Open</a>
-    </article>
-    <article class="module">
-      <img class="thumb part" src="../assets/svg/bulb.svg" alt="">
-      <h3>Smart Home</h3>
-      <p>Lights, locks, alarms, and a garden that water themselves.</p>
-      <a class="btn" href="smart-home/index.html">Open</a>
-    </article>
-    <article class="module">
-      <img class="thumb part" src="../assets/svg/ldr.svg" alt="">
-      <h3>Line Follower</h3>
-      <p>Light sensors and motors, the pieces that steer along a line.</p>
-      <a class="btn" href="line-follower/index.html">Open</a>
-    </article>
-    <article class="module">
-      <img class="thumb" src="../assets/svg/esp32-devkit.svg" alt="">
-      <h3>IoT</h3>
-      <p>ESP32 blink plus the sensor and display sketches a connected board would run.</p>
-      <a class="btn" href="iot/index.html">Open</a>
-    </article>
+  <div class="project-tools">
+    <input id="project-search" type="search" placeholder="Search circuits" aria-label="Search circuits">
+    <div class="filters" id="project-filters">
+      <button class="filter-btn on" type="button" data-set="">All</button>
+      <button class="filter-btn" type="button" data-set="build-robot">Robot</button>
+      <button class="filter-btn" type="button" data-set="smart-home">Smart Home</button>
+      <button class="filter-btn" type="button" data-set="line-follower">Line Follower</button>
+      <button class="filter-btn" type="button" data-set="iot">IoT</button>
+    </div>
   </div>
-  <h2 class="section-title" id="all">All 57 projects</h2>
-  <p class="lede">Same order as the simulator examples, grouped so they are easier to scan.</p>
+  <p class="lede" id="project-count"></p>
   <div id="project-catalog" data-root="../"></div>
 </main>
 <script src="../js/platform.js"></script>

@@ -580,7 +580,7 @@
       { level: 'robotics', id: 'esp32', name: 'ESP32', image: 'assets/svg/esp32-devkit.svg', blurb: 'A 3.3V board whose onboard lamp is GPIO2.', project: { href: 'arduino_simulator_v7.html?board=esp32&example=esp32_blink', label: 'ESP32 Onboard LED' }, items: [concept('esp32', 'The ESP32 can blink, and its onboard LED in this lab is GPIO2. Its pins are 3.3V. Do not feed them a 5V Uno signal.'), pick(['L37', 'L49']), predict('esp32', { lab: 'arduino_simulator_v7.html?board=esp32&example=esp32_blink', code: 'digitalWrite(2, HIGH);\ndelay(500);\ndigitalWrite(2, LOW);\ndelay(500);', q: 'The ESP32 onboard LED will…', choices: ['Blink', 'Stay off, because the Uno lamp is pin 13', 'Join Wi-Fi', 'Become an input'], answer: 0, hint: 'GPIO2 is the ESP32 lamp. HIGH, wait, LOW, wait is a blink.' }), sim('esp32', { lab: 'arduino_simulator_v7.html?board=esp32&example=esp32_blink', story: 'Switch the simulator to the ESP32 and blink GPIO2.', task: 'Run the ESP32 blink example.', q: 'The ESP32 onboard lamp is on…', choices: ['GPIO2', 'Pin A0', 'VIN'], answer: 0, hint: 'GPIO2 on the ESP32. Pin 13 on the Uno.' })] },
       { level: 'robotics', id: 'esp-plus', name: 'What the ESP32 Adds', image: 'assets/svg/esp32-devkit.svg', blurb: '3.3 volts, the EN pin, and pins that only listen.', items: [concept('esp-plus', 'Beyond the lamp, the ESP32 uses 3.3V logic, restarts from the EN pin, and keeps GPIO 34, 35, 36, and 39 as inputs only.'), pick(['L46', 'L47', 'L48']), predict('esp-plus', { lab: 'arduino_simulator_v7.html?board=esp32&example=esp32_blink', code: 'digitalWrite(2, HIGH);', q: 'This is an ESP32. The lamp on GPIO2 will…', choices: ['Turn on, at 3.3V logic', 'Need a 5V Uno signal on that pin', 'Become an input-only pin', 'Open a COM port'], answer: 0, hint: 'GPIO2 is the lab lamp. ESP32 pins are 3.3V.' }), sim('esp-plus', { lab: 'arduino_simulator_v7.html?board=esp32&example=esp32_blink', story: 'EN restarts the ESP32. GPIO 34, 35, 36, and 39 only listen.', task: 'Run the ESP32 blink example.', q: 'GPIO34 can…', choices: ['Only be an input', 'Fade a 5V motor', 'Replace EN'], answer: 0, hint: '34, 35, 36, and 39 are input only.' })] },
       { level: 'robotics', id: 'wifi', name: 'Wi-Fi & Bluetooth', image: 'assets/svg/esp32-devkit.svg', blurb: 'Both radios are on the ESP32 chip. The Uno does not have them.', items: [concept('wifi', 'An Uno needs an extra radio to join a network. The ESP32 has Wi-Fi and Bluetooth on the same chip. WiFi.begin is the call that joins a network.'), pick(['L44', 'L45']), predict('wifi', { lab: 'arduino_simulator_v7.html?board=esp32&example=esp32_blink', code: 'WiFi.begin("lab", "secret");', q: 'On an ESP32, this call…', choices: ['Joins a Wi-Fi network', 'Blinks pin 13 on an Uno', 'Sets a resistor', 'Names a COM port'], answer: 0, hint: 'WiFi.begin is the join. The Uno has no radio of its own.' }), sim('wifi', { lab: 'arduino_simulator_v7.html?board=esp32&example=esp32_blink', story: 'This lab can blink the ESP32. It does not join a network yet.', task: 'Run the ESP32 blink example and notice the board is an ESP32, not an Uno.', q: 'Which board already has Wi-Fi and Bluetooth on the chip?', choices: ['ESP32', 'Uno', 'A breadboard'], answer: 0, hint: 'The Uno needs an extra radio. The ESP32 does not.' })] },
-      { level: 'robotics', id: 'iot', name: 'IoT', image: 'assets/svg/esp32-devkit.svg', blurb: 'A board on the network can report sensors and take commands.', project: { href: 'projects/iot/index.html', label: 'IoT projects' }, items: [concept('iot', 'IoT means the board is part of a network: it can publish a temperature, or take a command, without a USB cable on the desk. The 55 IoT builds stay in Projects, separate from this lesson.'), predict('iot', { lab: 'arduino_simulator_v7.html?example=weather_station', code: 'Serial.print("T: ");\nSerial.println(temp);', q: 'The serial monitor will show…', choices: ['A temperature reading', 'Only the COM port name', 'A Wi-Fi password', 'Pin 13 as an input'], answer: 0, hint: 'The weather station prints the temperature it measured.' }), sim('iot', { lab: 'arduino_simulator_v7.html?example=weather_station', story: 'This lab reports on the serial monitor. On a network, that same reading is what an IoT board would publish.', task: 'Run the weather station and read the serial line.', q: 'IoT means the board can share that reading…', choices: ['Over a network, not only over USB', 'Only while the reset button is held', 'By replacing GND'], answer: 0, hint: 'The lesson stays here. The 55 IoT builds stay in Projects.' })] },
+      { level: 'robotics', id: 'iot', name: 'IoT', image: 'assets/svg/esp32-devkit.svg', blurb: 'A board on the network can report sensors and take commands.', project: { href: 'projects/iot/index.html', label: 'IoT projects' }, items: [concept('iot', 'IoT means the board is part of a network: it can publish a temperature, or take a command, without a USB cable on the desk. The simulator circuits stay in Projects, separate from this lesson.'), predict('iot', { lab: 'arduino_simulator_v7.html?example=weather_station', code: 'Serial.print("T: ");\nSerial.println(temp);', q: 'The serial monitor will show…', choices: ['A temperature reading', 'Only the COM port name', 'A Wi-Fi password', 'Pin 13 as an input'], answer: 0, hint: 'The weather station prints the temperature it measured.' }), sim('iot', { lab: 'arduino_simulator_v7.html?example=weather_station', story: 'This lab reports on the serial monitor. On a network, that same reading is what an IoT board would publish.', task: 'Run the weather station and read the serial line.', q: 'IoT means the board can share that reading…', choices: ['Over a network, not only over USB', 'Only while the reset button is held', 'By replacing GND'], answer: 0, hint: 'The lesson stays here. The simulator circuits stay in Projects.' })] },
       { level: 'robotics', id: 'uno-parts', name: 'Inside the Uno', image: 'assets/svg/arduino-uno.svg', blurb: 'The chip, the USB plug, reset, and the pins with a ~ mark.', items: [concept('uno-parts', 'A classic Uno is built around an ATmega328P. USB uploads the sketch. Reset starts setup() again. Pins marked ~ can do PWM.'), pick(['L39', 'L40', 'L41', 'L42', 'L43']), predict('uno-parts', { lab: 'arduino_simulator_v7.html?example=fade', code: 'analogWrite(9, 128);', q: 'Pin 9 has a ~ mark. The LED will…', choices: ['Glow at about half brightness', 'Stay a digital input', 'Reset the board', 'Open COM3'], answer: 0, hint: 'Pins marked ~ can do PWM. 128 is about halfway to 255.' }), sim('uno-parts', { lab: blinkLab, story: 'Reset starts setup() again. USB is how the sketch got here.', task: 'Run the blink example. Resetting the board would start that sketch over.', q: 'The classic Uno chip is…', choices: ['ATmega328P', 'A DHT11', 'A COM port'], answer: 0, hint: 'The chip runs the sketch. USB uploads it. ~ pins can fade.' })] },
       { level: 'robotics', id: 'mcu', name: 'Inside the Microcontroller', image: 'assets/svg/microcontroller.svg', blurb: 'The chip is the computer. The board is the chip plus helpers.', items: [concept('mcu', 'A microcontroller is processor, memory, and pins on one chip. Flash keeps the sketch when power is gone. RAM is scratch space and clears on reset.'), pick(['L89', 'L90', 'L91', 'L92', 'L93', 'L94']), predict('mcu', { lab: blinkLab, code: 'digitalWrite(13, HIGH);\ndelay(500);\ndigitalWrite(13, LOW);\ndelay(500);', q: 'You unplug the board, then plug it back in. The blink will…', choices: ['Start again, because flash kept the sketch', 'Be gone, because RAM was the only copy', 'Wait for a new Upload every time', 'Become an analog input'], answer: 0, hint: 'Flash keeps the program. RAM clears when power drops.' }), sim('mcu', { lab: blinkLab, story: 'The chip is the computer. The Uno board is that chip plus the USB plug, the regulator, and the pins.', task: 'Run the blink example. The sketch is running on the microcontroller.', q: 'Which memory clears when you press reset?', choices: ['RAM', 'Flash', 'The resistor'], answer: 0, hint: 'RAM is scratch space. Flash still holds the sketch.' })] }
     ];
@@ -799,8 +799,11 @@
     const cats = (tracks.lessons && tracks.lessons.categories) || [];
     const levels = (tracks.lessons && tracks.lessons.levels) || [];
     const items = (tracks.lessons && tracks.lessons.items) || [];
+    const stepNames = { concept: 'Concept', mcq: 'Quiz', drag: 'Quiz', predict: 'Code prediction', sim: 'Simulator challenge', blanks: 'Mini project', wire: 'Mini project', order: 'Mini project' };
     let level = levels[0] || { id: 'foundations', name: 'Level 1 — Arduino Foundations' };
-    let continueHref = 'learning/lessons/index.html';
+    let continueHref = 'learning/lessons/index.html#cat-meet';
+    let nextLabel = 'Meet Arduino · Concept, 1 of 4';
+    let continueLabel = 'Start with your first LED';
     function firstOpen(kind) {
       let href = 'learning/lessons/index.html';
       cats.some(function (cat) {
@@ -811,14 +814,22 @@
       });
       return href;
     }
-    cats.some(function (cat) {
-      const open = cat.items.some(function (it) { return !solved.has(it.id); });
-      if (!open) return false;
+    const foundOpen = cats.some(function (cat) {
+      const openAt = cat.items.findIndex(function (it) { return !solved.has(it.id); });
+      if (openAt < 0) return false;
+      const openItem = cat.items[openAt];
       continueHref = 'learning/lessons/index.html#cat-' + cat.id;
+      nextLabel = cat.name + ' · ' + (stepNames[openItem.kind] || 'Step') + ', ' + (openAt + 1) + ' of ' + cat.items.length;
       level = levels.find(function (row) { return row.id === cat.level; }) || level;
       return true;
     });
     const done = items.filter(function (it) { return solved.has(it.id); }).length;
+    if (done) continueLabel = 'Continue';
+    if (!foundOpen && done) {
+      continueLabel = 'Review lessons';
+      nextLabel = 'Every lesson is complete.';
+      continueHref = 'learning/lessons/index.html';
+    }
     const names = {
       foundations: 'Level 1 · Arduino Foundations',
       programming: 'Level 2 · Programming',
@@ -833,6 +844,8 @@
       xp: data.xp || 0,
       streak: streakCount(data.days),
       continueHref: continueHref,
+      continueLabel: continueLabel,
+      nextLabel: nextLabel,
       predictHref: firstOpen('predict'),
       simHref: firstOpen('sim')
     }));
@@ -1017,8 +1030,9 @@
       const extra = maybeBonuses();
       markModule(track.module);
       burst();
-      say(true, (gained || extra) ? 'That build works.' : 'Already collected.', (gained || 0) + extra);
+      say(true, 'Correct.', (gained || 0) + extra);
       if (categoryDone() || track.items.every(function (it) { return solvedSet(read()).has(it.id); })) render();
+      else unlockNext();
       return;
     }
     markModule('learning/projects');
@@ -1233,14 +1247,14 @@
     const cards = [
       ['lessons', 'Learn', 'Five levels. Each topic runs concept, lesson, quiz, then a simulator challenge.', 'lessons/index.html'],
       ['quizzes', 'Practice', 'Quiz and code checks. They follow the lesson. They are not the whole course.', 'quizzes/index.html'],
-      ['projects', 'Final projects', 'Five short builds. The 55 lab projects stay in Projects.', 'projects/index.html']
+      ['projects', 'Final projects', 'Five short builds. The simulator circuits stay in Projects.', 'projects/index.html']
     ];
     app.innerHTML =
       '<div class="xp-row"><p class="lede" style="margin:0">Learn, then quiz, then simulate. Points come from thinking and doing.</p><span class="xp-pill" id="xp-pill">' + xpNow() + ' XP</span></div>' +
       '<div class="grid">' + cards.map(function (card) {
         const track = tracks[card[0]];
         const got = track.items.filter(function (item) { return solved.has(item.id); }).length;
-        return '<article class="module"><h3>' + card[1] + '</h3><p>' + card[2] + '</p><p class="step-dots">' + got + ' / ' + track.items.length + ' done</p><a class="btn" href="' + root + card[3] + '">Play</a></article>';
+        return '<article class="module"><h3>' + card[1] + '</h3><p>' + card[2] + '</p><p class="step-dots">' + got + ' / ' + track.items.length + ' done</p><a class="btn" href="' + root + card[3] + '">' + (got ? 'Continue' : 'Start') + '</a></article>';
       }).join('') + '</div>';
     return;
   }
@@ -1268,11 +1282,21 @@
     return '<img class="learn-fig" src="' + root + file + '" alt="' + escapeHtml(item.title) + '">';
   }
 
-  function labHtml(item) {
+  function labHtml(item, primary) {
     const href = item.lab || stepLab[item.id];
     if (!href) return '';
     const label = item.kind === 'predict' || item.kind === 'sim' ? 'Run in Simulator' : 'Try it in the lab';
-    return '<p><a class="btn ghost" data-return="1" href="' + root + href + '">' + label + '</a></p>';
+    const link = '<a class="' + (primary ? 'btn' : 'btn ghost') + '" data-return="1" href="' + root + href + '">' + label + '</a>';
+    return primary ? link : '<p>' + link + '</p>';
+  }
+
+  function unlockNext() {
+    const next = document.getElementById('next');
+    if (!next) return;
+    const items = activeItems();
+    const hasCats = catIndex >= 0 && track.categories;
+    const nextTopic = hasCats && index === items.length - 1 && catIndex < track.categories.length - 1;
+    next.disabled = index === items.length - 1 && !nextTopic;
   }
 
   function rememberPlace() {
@@ -1377,7 +1401,7 @@
     const catDone = categoryDone();
     const cat = catIndex >= 0 && track.categories ? track.categories[catIndex] : null;
     const catName = cat ? cat.name : '';
-    const kickers = { concept: 'Concept · +5 XP', mcq: 'Quiz · +10 XP', drag: 'Quiz · +15 XP', predict: 'Code prediction · +15 XP', sim: 'Simulator challenge · +25 XP', blanks: 'Mini project · +50 XP', wire: 'Mini project · +50 XP', order: 'Mini project · +50 XP' };
+    const stepNames = { concept: 'Concept', mcq: 'Quiz', drag: 'Quiz', predict: 'Code prediction', sim: 'Simulator challenge', blanks: 'Mini project', wire: 'Mini project', order: 'Mini project' };
     const build = item.kind === 'blanks' || item.kind === 'wire' || item.kind === 'order';
     let banner = '';
     const projectLine = cat && cat.project ? '<p class="story">Next build, kept in Projects: <a data-return="1" href="' + root + cat.project.href + '">' + escapeHtml(cat.project.label) + '</a></p>' : '';
@@ -1388,19 +1412,20 @@
     const taskLine = item.task ? (build ? '<p class="story"><b>' + escapeHtml(item.task) + '.</b></p>' : '<p class="story"><b>Challenge.</b> ' + escapeHtml(item.task) + '</p>') : '';
     app.innerHTML =
       '<div class="xp-row"><span class="step-dots">' + (catName ? escapeHtml(catName) + ' · ' : '') + (index + 1) + ' / ' + items.length + (solved.has(item.id) ? ' · done' : '') + '</span><span class="xp-pill" id="xp-pill">' + xpNow() + ' XP</span></div>' +
-      '<article class="panel learn-card"><p class="unit-kicker">' + escapeHtml(kickers[item.kind] || 'Step') + '</p><h2>' + escapeHtml(item.title) + '</h2>' +
+      '<article class="panel learn-card"><p class="unit-kicker">' + escapeHtml((stepNames[item.kind] || 'Step') + ', ' + (index + 1) + ' of ' + items.length) + '</p><h2>' + escapeHtml(item.title) + '</h2>' +
       '<div class="learn-top">' + figHtml(item) + '<div>' +
       (told ? '<p class="story">' + escapeHtml(told) + '</p>' : '') +
       taskLine +
-      (build ? '' : labHtml(item)) +
+      (build || item.kind === 'sim' ? '' : labHtml(item)) +
       '</div></div>' +
       (!build && item.code ? '<pre class="code-line">' + escapeHtml(item.code) + '</pre>' : '') +
       body +
       projectLine +
       '<p class="feedback" id="feedback"></p>' +
       '<div class="learn-nav">' +
+      (item.kind === 'sim' ? labHtml(item, true) : '') +
       (catIndex >= 0 ? '<button class="btn ghost" type="button" id="all-cats">All topics</button>' : '') +
-      '<button class="btn ghost" type="button" id="prev">Back</button><button class="btn" type="button" id="next">Next</button></div>' +
+      '<button class="btn ghost" type="button" id="prev">Back</button><button class="btn' + (item.kind === 'sim' ? ' ghost' : '') + '" type="button" id="next">Next</button></div>' +
       banner +
       '</article>';
 
@@ -1410,7 +1435,7 @@
     const prevTopic = hasCats && index === 0 && catIndex > 0;
     const nextTopic = hasCats && index === items.length - 1 && catIndex < track.categories.length - 1;
     prev.disabled = index === 0 && !prevTopic;
-    next.disabled = index === items.length - 1 && !nextTopic;
+    next.disabled = !solved.has(item.id) || (index === items.length - 1 && !nextTopic);
     if (prevTopic) prev.textContent = 'Previous lesson';
     if (nextTopic) next.textContent = 'Next lesson';
     function goTopic(to, atEnd) {
@@ -1482,15 +1507,19 @@
       btn.onclick = function () {
         const pick = Number(btn.dataset.i);
         app.querySelectorAll('.choice').forEach(function (b) { b.classList.remove('good', 'bad'); });
+        app.querySelectorAll('.choice-note').forEach(function (note) { note.remove(); });
         if (pick === item.answer) {
           btn.classList.add('good');
+          btn.insertAdjacentHTML('beforeend', '<span class="choice-note">Correct</span>');
           const gained = award(item.id, item.xp) + maybeBonuses();
           markModule(track.module);
-          say(true, gained ? 'Nice.' : 'Already collected.', gained);
+          say(true, 'Correct.', gained);
           if (categoryDone() || track.items.every(function (it) { return solvedSet(read()).has(it.id); })) render();
+          else unlockNext();
         } else {
           btn.classList.add('bad');
-          say(false, item.hint, 0);
+          btn.insertAdjacentHTML('beforeend', '<span class="choice-note">Try again. ' + escapeHtml(item.hint || '') + '</span>');
+          say(false, 'Try again.', 0);
         }
       };
     });
@@ -1500,8 +1529,9 @@
     document.getElementById('mark-read').onclick = function () {
       const gained = award(item.id, item.xp) + maybeBonuses();
       markModule(track.module);
-      say(true, gained ? 'Concept saved.' : 'Already collected.', gained);
+      say(true, 'Correct.', gained);
       if (categoryDone() || track.items.every(function (it) { return solvedSet(read()).has(it.id); })) render();
+      else unlockNext();
     };
   }
 
@@ -1526,10 +1556,11 @@
         slot.classList.add('good');
         const gained = award(item.id, item.xp) + maybeBonuses();
         markModule(track.module);
-        say(true, gained ? 'That fits.' : 'Already collected.', gained);
+        say(true, 'Correct.', gained);
         if (categoryDone() || track.items.every(function (it) { return solvedSet(read()).has(it.id); })) render();
+        else unlockNext();
       } else {
-        say(false, 'Not that one. Try another chip.', 0);
+        say(false, 'Try again. Pick another chip.', 0);
       }
     };
   }
