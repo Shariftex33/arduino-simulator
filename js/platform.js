@@ -49,6 +49,8 @@
       ['Simulator', root + 'simulator/index.html'],
       ['Learning', root + 'learning/index.html'],
       ['Projects', root + 'projects/index.html'],
+      ['Showcase', root + 'share/index.html'],
+      ['+ NEW PROJECT', root + 'share/new/index.html', 'nav-cta'],
       ['Leaderboard', root + 'leaderboard/index.html'],
       ['Teach', root + 'teach/index.html'],
       ['Pricing', root + 'pricing/index.html'],
@@ -59,7 +61,11 @@
       '<a class="brand" href="' + root + 'index.html"><img src="' + root + 'assets/svg/arduino-uno.svg?v=r3" alt=""><span>Arduino Lab</span></a>' +
       '<nav class="nav">' + links.map(function (item) {
         const path = new URL(item[1], location.href).pathname.replace(/\\/g, '/');
-        const active = here === path ? ' class="active"' : '';
+        const showcaseOpen = item[0] === 'Showcase' && /\/share\/index\.html$/.test(here);
+        const classes = [];
+        if (here === path || showcaseOpen) classes.push('active');
+        if (item[2]) classes.push(item[2]);
+        const active = classes.length ? ' class="' + classes.join(' ') + '"' : '';
         return '<a' + active + ' href="' + item[1] + '">' + item[0] + '</a>';
       }).join('') + lessonReturn() + '</nav>';
   }

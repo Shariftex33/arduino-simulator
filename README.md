@@ -4,14 +4,16 @@ Lessons and the simulator stay as pages. Accounts, XP, streaks, certificates, cl
 
 ## Run locally
 
-Node.js 22 or newer is required.
+Node.js 22 or newer is required. From the project folder:
 
-```bash
+```powershell
 npm install --prefix server
 npm start --prefix server
 ```
 
 Open `http://localhost:8080`.
+
+`npm install` installs dependencies once. Later, start the server with `npm start --prefix server` only.
 
 ## Deploy
 

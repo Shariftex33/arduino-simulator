@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>New project</title>
+<link rel="stylesheet" href="../../css/platform.css">
+<link rel="stylesheet" href="../../css/share.css?v=4">
+</head>
+<body data-depth="2" data-view="../index.html">
+<header class="site-header"></header>
+<main class="share-shell">
+  <div class="share-layout" id="share-layout">
+    <form class="share-editor" id="editor">
+      <p class="draft-pill">draft</p>
+      <h1 class="sr-only" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)">Showcase</h1>
+      <input class="share-title" id="title" type="text" maxlength="120" placeholder="Insert your project title, make it sound cool!" autocomplete="off">
+      <label class="share-label" for="pitch">Here is your elevator pitch. Describe your project in one short sentence</label>
+      <textarea class="share-pitch" id="pitch" maxlength="240" rows="2"></textarea>
+
+      <label class="cover-drop" id="cover-drop">
+        <img id="cover-preview" alt="" hidden>
+        <span>upload your cover image</span>
+        <input id="cover-file" type="file" accept="image/*" hidden>
+      </label>
+
+      <section id="sec-team">
+        <h2>The Team</h2>
+        <label class="checkline"><input type="checkbox" id="not-author"> I'm not this project's author</label>
+        <p class="hint" id="author-hint" hidden>Put the original author in the team list, then add yourself if you helped.</p>
+        <div id="member-list"></div>
+        <div class="inline-add" id="member-add" hidden>
+          <input id="member-name" type="text" maxlength="60" placeholder="Name" autocomplete="off">
+          <button class="btn" type="button" id="member-confirm">Add</button>
+        </div>
+        <button class="text-btn" type="button" id="add-member">add a member</button>
+
+        <h3>Work attribution</h3>
+        <textarea id="attribution" maxlength="600" placeholder="Credit a tutorial, library, or design this build stands on."></textarea>
+        <div id="contributor-list"></div>
+        <div class="inline-add" id="contributor-add" hidden>
+          <input id="contributor-name" type="text" maxlength="60" placeholder="Contributor name" autocomplete="off">
+          <button class="btn" type="button" id="contributor-confirm">Add</button>
+        </div>
+        <button class="text-btn" type="button" id="add-contributor">Add a contributor</button>
+      </section>
+
+      <section id="sec-components">
+        <h2>Devices &amp; Components</h2>
+        <div id="component-list"></div>
+        <button class="text-btn" type="button" data-picker="components">select a component or supply</button>
+        <div class="picker-panel" id="picker-components" hidden>
+          <input type="search" placeholder="Search parts" data-filter="components" autocomplete="off">
+          <div class="picker-list" id="list-components"></div>
+        </div>
+      </section>
+
+      <section id="sec-tools">
+        <h2>Hardware &amp; Tools</h2>
+        <p class="empty-note" id="tools-empty">No tools used in this project</p>
+        <div id="tool-list"></div>
+        <button class="text-btn" type="button" data-picker="tools">select a tool or machine</button>
+        <div class="picker-panel" id="picker-tools" hidden>
+          <input type="search" placeholder="Search tools" data-filter="tools" autocomplete="off">
+          <div class="picker-list" id="list-tools"></div>
+        </div>
+      </section>
+
+      <section id="sec-software">
+        <h2>Software &amp; Tools</h2>
+        <div id="software-list"></div>
+        <button class="text-btn" type="button" data-picker="software">select an app or platform</button>
+        <div class="picker-panel" id="picker-software" hidden>
+          <input type="search" placeholder="Search apps" data-filter="software" autocomplete="off">
+          <div class="picker-list" id="list-software"></div>
+        </div>
+      </section>
+
+      <section id="sec-description">
+        <h2>Project Description</h2>
+        <button class="text-btn edit-section" type="button" id="edit-desc">EDIT THIS SECTION</button>
+        <textarea id="description" hidden placeholder="How it works, how to wire it, and what someone should try first."></textarea>
+      </section>
+
+      <section id="sec-code">
+        <h2>Code</h2>
+        <div id="code-list"></div>
+        <div id="code-form" hidden>
+          <textarea id="code-input" placeholder="Paste a link or the sketch"></textarea>
+          <button class="btn" type="button" id="code-confirm">Add</button>
+        </div>
+        <button class="text-btn" type="button" id="add-code">Add a link or embed</button>
+      </section>
+
+      <section id="sec-apps">
+        <h2>Arduino App Lab</h2>
+        <p class="empty-note" id="apps-empty">No Arduino App to add in this project</p>
+        <div id="app-list"></div>
+        <label class="text-btn">add arduino app (.zip)
+          <input id="app-file" type="file" accept=".zip,application/zip" hidden>
+        </label>
+      </section>
+
+      <section id="sec-files">
+        <h2>Downloadable files</h2>
+        <p class="empty-note" id="files-empty">No files to add in this project</p>
+        <div id="file-list"></div>
+        <label class="text-btn">add a file
+          <input id="extra-file" type="file" hidden>
+        </label>
+      </section>
+
+      <section id="sec-docs">
+        <h2>Documentation</h2>
+        <p class="empty-note" id="docs-empty">No documentation to add</p>
+        <div id="doc-list"></div>
+        <div id="doc-form" hidden>
+          <textarea id="doc-input" placeholder="Paste a link or a short note"></textarea>
+          <button class="btn" type="button" id="doc-confirm">Add</button>
+        </div>
+        <button class="text-btn" type="button" id="add-doc">Add a link or embed</button>
+      </section>
+
+      <div class="share-actions">
+        <button class="btn" type="button" id="publish-btn">Publish</button>
+        <button class="btn ghost" type="button" id="go-preview">GO TO PREVIEW</button>
+        <button class="btn ghost" type="submit">Save changes</button>
+        <button class="text-btn danger" type="button" id="delete-draft">Delete</button>
+        <span class="save-status" id="save-status" role="status"></span>
+      </div>
+    </form>
+
+    <aside class="checklist-card" aria-label="Project checklist">
+      <h2>Project checklist</h2>
+      <p>Add your content in these sections to correctly publish your project.</p>
+      <button class="text-btn" type="button" id="open-guidelines">Check content guidelines</button>
+      <ul class="check-list" id="checklist"></ul>
+    </aside>
+  </div>
+
+  <article class="preview" id="preview" hidden>
+    <div class="preview-bar">
+      <button class="btn ghost" type="button" id="back-edit">Back to editor</button>
+      <span class="draft-pill">draft</span>
+      <button class="btn" type="button" id="preview-save">Save changes</button>
+    </div>
+    <img class="preview-cover" id="preview-cover" alt="" hidden>
+    <h1 id="preview-title"></h1>
+    <p class="lede" id="preview-pitch"></p>
+    <section>
+      <h2>The Team</h2>
+      <div class="block-list" id="preview-team"></div>
+    </section>
+    <section>
+      <h2>Devices &amp; Components</h2>
+      <div class="block-list" id="preview-components"></div>
+    </section>
+    <section>
+      <h2>Hardware &amp; Tools</h2>
+      <div class="block-list" id="preview-tools"></div>
+    </section>
+    <section>
+      <h2>Software &amp; Tools</h2>
+      <div class="block-list" id="preview-software"></div>
+    </section>
+    <section>
+      <h2>Project Description</h2>
+      <p class="preview-pre" id="preview-description"></p>
+    </section>
+    <section>
+      <h2>Code</h2>
+      <div class="block-list" id="preview-code"></div>
+    </section>
+    <section>
+      <h2>Arduino App Lab</h2>
+      <div class="block-list" id="preview-apps"></div>
+    </section>
+    <section>
+      <h2>Downloadable files</h2>
+      <div class="block-list" id="preview-files"></div>
+    </section>
+    <section>
+      <h2>Documentation</h2>
+      <div class="block-list" id="preview-docs"></div>
+    </section>
+  </article>
+</main>
+
+<dialog class="guide-dialog" id="guidelines">
+  <h2>Content guidelines</h2>
+  <ol>
+    <li><strong>Intro.</strong> Use a specific title and one sentence that says what the build does.</li>
+    <li><strong>The team.</strong> Name the people who made it. If this is not your project, say so.</li>
+    <li><strong>Devices &amp; Components.</strong> List the boards, sensors, and modules, with quantities.</li>
+    <li><strong>Hardware &amp; Tools.</strong> Add the tools you actually used.</li>
+    <li><strong>Software &amp; Tools.</strong> Name the apps and platforms, including this simulator if you used it.</li>
+    <li><strong>Project description.</strong> Explain the wiring, the behavior, and the first thing to try.</li>
+    <li><strong>Code.</strong> Share a link or paste the sketch.</li>
+    <li><strong>Arduino App Lab.</strong> Attach a .zip only when the project is an Arduino App.</li>
+    <li><strong>Downloadable files.</strong> Diagrams, models, or datasheets belong here.</li>
+    <li><strong>Documentation.</strong> Extra write-ups or videos go here.</li>
+  </ol>
+  <button class="btn" type="button" id="close-guidelines">Close</button>
+</dialog>
+
+<script src="../../js/sync.js"></script>
+<script src="../../js/platform.js"></script>
+<script src="../../js/share.js"></script>
+</body>
+</html>

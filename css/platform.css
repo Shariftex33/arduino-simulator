@@ -69,6 +69,8 @@ a { color: inherit; }
 
 .nav a:hover { color: var(--tx); border-color: var(--card-border); }
 .nav a.active { color: #042f2e; background: var(--ac); border-color: var(--ac); font-weight: 650; }
+.nav a.nav-cta { border-color: var(--ac); color: #6ee7b7; font-weight: 700; }
+.nav a.nav-cta.active { color: #042f2e; }
 
 main {
   width: min(1100px, calc(100% - 32px));

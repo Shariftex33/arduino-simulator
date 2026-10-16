@@ -1506,25 +1506,63 @@ button.pir-dome.svg-pir.active { background: none; box-shadow: none; border: non
 .bb-pow.minus { color: #2563eb; font-weight: 800; }
 .bb-hole {
   position: absolute;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: radial-gradient(circle at 40% 35%, #6b7280, #111827 72%);
-  box-shadow: inset 0 1px 1px rgba(255,255,255,.28), 0 0 0 1px rgba(0,0,0,.35);
+  width: 5px;
+  height: 5px;
+  border-radius: 1px;
+  background: linear-gradient(180deg, #57534e, #1c1917);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.28), 0 0 0 1px rgba(0,0,0,.4);
   cursor: crosshair;
   z-index: 2;
 }
 .bb-hole:hover, .bb-hole.wire-source { box-shadow: 0 0 0 2px #fff; }
+.bb-hole.occupied {
+  border-radius: 50%;
+  background: radial-gradient(circle at 40% 35%, #d9f99d, #22c55e 62%, #15803d);
+  box-shadow: 0 0 0 1px #166534, inset 0 1px 0 rgba(255,255,255,.8);
+}
 .comp-box.part.seated { padding: 0; }
 .comp-box.part.seated .comp-body {
   position: absolute;
   left: 50%;
-  top: 4px;
+  top: 0;
   transform: translateX(-50%);
 }
-.comp-box.part.seated .term-pin { position: absolute; margin: 0; z-index: 4; }
+.comp-box.part.seated .rgb-led { height: 34px; overflow: hidden; }
+.comp-box.part.seated.flat .comp-body {
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: auto;
+  transform: none;
+}
+.comp-box.part.seated.flat .res-body,
+.comp-box.part.seated.flat .bat-body,
+.comp-box.part.seated.flat .res-body img,
+.comp-box.part.seated.flat .bat-body img {
+  width: 100%;
+  height: 100%;
+  object-fit: fill;
+}
+.comp-box.part.seated .term-pin {
+  position: absolute;
+  margin: 0;
+  width: 8px;
+  height: 8px;
+  border: none;
+  border-radius: 50%;
+  background: radial-gradient(circle at 40% 35%, #d9f99d, #22c55e 62%, #15803d);
+  box-shadow: 0 0 0 1px #166534, inset 0 1px 0 rgba(255,255,255,.8);
+  z-index: 5;
+}
 .comp-box.part.seated .term-pin::after { display: none; }
-.comp-box.part.seated .term-pin::before { height: 22px; }
+.comp-box.part.seated .term-pin::before {
+  width: 2px;
+  height: 10px;
+  bottom: 8px;
+  border-radius: 1px;
+}
+.comp-box.part.seated.flat .term-pin::before { display: none; }
 </style>
 </head>
 <body data-module="simulator/arduino-uno">
@@ -2750,7 +2788,7 @@ function renderComponents() {
     const side = (c.type === 'res' || c.type === 'bat') ? ' side-pins' : '';
 
     return `
-      <div class="comp-box part part-${c.type}${side}${lay ? ' seated' : ''}${pickedId === c.id ? ' picked' : ''}${selectedIds.has(c.id) ? ' selected' : ''}" id="comp-${c.id}" style="left:${c.x}px; top:${c.y}px;${lay ? `width:${lay.w}px;height:${lay.h}px;` : ''}" onmousedown="dragStart(event, '${c.id}')" ontouchstart="dragStart(event, '${c.id}')">
+      <div class="comp-box part part-${c.type}${side}${lay ? ' seated' : ''}${lay && lay.flat ? ' flat' : ''}${pickedId === c.id ? ' picked' : ''}${selectedIds.has(c.id) ? ' selected' : ''}" id="comp-${c.id}" style="left:${c.x}px; top:${c.y}px;${lay ? `width:${lay.w}px;height:${lay.h}px;` : ''}" onmousedown="dragStart(event, '${c.id}')" ontouchstart="dragStart(event, '${c.id}')">
         <span class="part-name">${PART_NAMES[c.type] || spec.name}</span>
         <button class="comp-close" onclick="removeComponent('${c.id}')" title="Remove">✕</button>
         <div class="comp-body">${bodyHtml}</div>
@@ -2759,6 +2797,7 @@ function renderComponents() {
     `;
   }).join('');
 
+  markOccupiedHoles();
   updateVisualOutputs();
 }
 
@@ -3015,7 +3054,7 @@ $('arduino-uno').addEventListener('mousedown', startBoardDrag);
 $('arduino-uno').addEventListener('touchstart', startBoardDrag, { passive: true });
 
 /* ===== breadboard: rails + 5-hole rows, parts snap in, wires land on holes ===== */
-const BB = { cols: 24, pitch: 14, hole: 8 };
+const BB = { cols: 24, pitch: 14, hole: 5 };
 
 function bbMetrics() {
   const p = BB.pitch;
@@ -3150,6 +3189,17 @@ function nearestGridHole(x, y, maxDist) {
   return best;
 }
 
+function markOccupiedHoles() {
+  const taken = new Set();
+  components.forEach(c => {
+    if (!c.seat) return;
+    Object.values(c.seat).forEach(id => taken.add(String(id)));
+  });
+  document.querySelectorAll('#breadboard .bb-hole').forEach(el => {
+    el.classList.toggle('occupied', taken.has(el.dataset.hole));
+  });
+}
+
 function seatedLayout(c) {
   const spec = COMP_SPECS[c.type];
   if (!c.seat || !spec) return null;
@@ -3165,16 +3215,27 @@ function seatedLayout(c) {
   const minX = Math.min(...xs);
   const maxX = Math.max(...xs);
   const maxY = Math.max(...ys);
-  const wide = { lcd: 176, oled: 168, ultrasonic: 124, relay: 96, seg7: 84, servo: 78, rgb: 64 };
+  const dot = 4;
+  const flat = c.type === 'res' || c.type === 'bat';
+  if (flat) {
+    const boxW = Math.max(maxX - minX, 8);
+    const boxH = c.type === 'bat' ? 22 : 18;
+    const x = minX;
+    const y = (Math.min(...ys) + maxY) / 2 - boxH / 2;
+    const pins = {};
+    pts.forEach(p => { pins[p.pin] = { left: p.x - x - dot, top: p.y - y - dot }; });
+    return { x, y, w: boxW, h: boxH, pins, flat: true };
+  }
+  const wide = { lcd: 176, oled: 168, ultrasonic: 124, relay: 96, seg7: 84, servo: 78, rgb: 48 };
   const tall = ['pot', 'ldr', 'ultrasonic', 'dht'].includes(c.type);
-  const boxW = Math.max(wide[c.type] || 52, maxX - minX + 28);
-  const pinFromTop = tall ? 86 : 40;
-  const boxH = tall ? 100 : 54;
+  const boxW = Math.max(wide[c.type] || 52, maxX - minX + 20);
+  const pinFromTop = tall ? 86 : 46;
+  const boxH = pinFromTop + 8;
   const x = (minX + maxX) / 2 - boxW / 2;
   const y = maxY - pinFromTop;
   const pins = {};
-  pts.forEach(p => { pins[p.pin] = { left: p.x - x - 5.5, top: p.y - y - 5.5 }; });
-  return { x, y, w: boxW, h: boxH, pins };
+  pts.forEach(p => { pins[p.pin] = { left: p.x - x - dot, top: p.y - y - dot }; });
+  return { x, y, w: boxW, h: boxH, pins, flat: false };
 }
 
 function applySeatedPositions() {
@@ -3212,12 +3273,16 @@ function snapPartToBoard(c) {
   const hit = nearestGridHole(pt.x, pt.y, 22);
   if (!hit) return false;
   const pins = COMP_SPECS[c.type].pins;
-  for (let start = hit.col; start + pins.length - 1 <= BB.cols; start++) {
-    const holes = pins.map((_, i) => (start + i) + hit.row);
-    if (holes.some(h => holeTaken(h, c.id))) continue;
-    c.seat = {};
-    pins.forEach((p, i) => { c.seat[p] = holes[i]; });
-    return true;
+  const strides = (c.type === 'res' || c.type === 'bat') ? [4, 1] : [1];
+  for (const stride of strides) {
+    const span = (pins.length - 1) * stride;
+    for (let start = hit.col; start + span <= BB.cols; start++) {
+      const holes = pins.map((_, i) => (start + i * stride) + hit.row);
+      if (holes.some(h => holeTaken(h, c.id))) continue;
+      c.seat = {};
+      pins.forEach((p, i) => { c.seat[p] = holes[i]; });
+      return true;
+    }
   }
   return false;
 }
@@ -4739,13 +4804,13 @@ function autoConnectWires() {
   components.forEach(c => { c.seat = null; });
   const byId = id => components.find(x => x.id === id);
   function placePair(res, led) {
-    if (!res || !led || placed.has(res.id) || col + 4 > BB.cols) return false;
-    res.seat = { A: col + 'c', B: (col + 1) + 'c' };
-    led.seat = { ANODE: (col + 3) + 'c', CATHODE: (col + 4) + 'c' };
-    jumpers.push([(col + 1) + 'e', (col + 3) + 'e']);
+    if (!res || !led || placed.has(res.id) || col + 7 > BB.cols) return false;
+    res.seat = { A: col + 'c', B: (col + 4) + 'c' };
+    led.seat = { ANODE: (col + 6) + 'c', CATHODE: (col + 7) + 'c' };
+    jumpers.push([(col + 4) + 'e', (col + 6) + 'e']);
     placed.add(res.id);
     placed.add(led.id);
-    col += 6;
+    col += 9;
     return true;
   }
   components.forEach(c => {
@@ -4755,11 +4820,13 @@ function autoConnectWires() {
     if (c.type === 'res' && resToLed.has(c.id) && placePair(c, byId(resToLed.get(c.id)))) return;
     if ((c.type === 'led_r' || c.type === 'led_y' || c.type === 'led_g' || c.type === 'led_b') && ledToRes.has(c.id) && placePair(byId(ledToRes.get(c.id)), c)) return;
     const n = spec.pins.length;
-    if (col + n - 1 > BB.cols) return;
+    const stride = (c.type === 'res' || c.type === 'bat') ? 4 : 1;
+    const span = (n - 1) * stride;
+    if (col + span > BB.cols) return;
     c.seat = {};
-    spec.pins.forEach((p, i) => { c.seat[p] = (col + i) + 'c'; });
+    spec.pins.forEach((p, i) => { c.seat[p] = (col + i * stride) + 'c'; });
     placed.add(c.id);
-    col += n + 1;
+    col += span + 2;
   });
 
   plan.forEach(item => {
