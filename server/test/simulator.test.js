@@ -159,7 +159,6 @@ test('opening a project loads its sketch, parts, and run', { timeout: 45000 }, a
     assert.ok(opened.comps >= 1, 'project opened with no parts');
     assert.doesNotMatch(opened.wires, /Wires:\s*0/);
 
-    await send('Runtime.evaluate', { expression: `toggleExecution()`, returnByValue: true });
     const running = await waitFor('sketch did not start', async function () {
       const result = await send('Runtime.evaluate', {
         expression: `({
@@ -169,7 +168,12 @@ test('opening a project loads its sketch, parts, and run', { timeout: 45000 }, a
         returnByValue: true
       });
       const value = result.result && result.result.result && result.result.result.value;
-      if (!value || value.word !== 'Stop') return null;
+      if (!value) return null;
+      if (value.word === 'Run') {
+        await send('Runtime.evaluate', { expression: `toggleExecution()`, returnByValue: true });
+        return null;
+      }
+      if (value.word !== 'Stop' || !/Sketch started/.test(value.serial)) return null;
       return value;
     }, 25);
     assert.match(running.serial, /Sketch started/);

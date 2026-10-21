@@ -51,7 +51,7 @@ void loop() {
 };
 
 EXAMPLES.servo = {
-  code: `// Example 24: Control the servo angle with a potentiometer
+  code: `// Example 24: The servo horn sweeps. The potentiometer sets how far it turns.
 #include <Servo.h>
 
 Servo myServo;
@@ -63,12 +63,15 @@ void setup() {
 }
 
 void loop() {
-  int val = analogRead(potPin);
-  int angle = map(val, 0, 1023, 0, 180);
-  myServo.write(angle);
-  Serial.print("Angle: ");
-  Serial.println(angle);
-  delay(50);
+  int span = map(analogRead(potPin), 0, 1023, 40, 180);
+  for (int pos = 0; pos <= span; pos += 3) {
+    myServo.write(pos);
+    delay(15);
+  }
+  for (int pos = span; pos >= 0; pos -= 3) {
+    myServo.write(pos);
+    delay(15);
+  }
 }`,
   setup() {
     clearWorkspace();

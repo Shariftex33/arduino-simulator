@@ -225,7 +225,7 @@ class __Servo {
     wiredComps(__pinKey(this.pin)).forEach(({ comp }) => {
       if (comp.type !== 'servo') return;
       comp.state.angle = Math.round(angle);
-      const horn = $('servo-horn-' + comp.id); if (horn) horn.style.transform = `rotate(${angle}deg)`;
+      paintServoHorn(comp.id, angle);
       const l = $('servo-lbl-' + comp.id); if (l) l.textContent = Math.round(angle) + '°';
     });
   }

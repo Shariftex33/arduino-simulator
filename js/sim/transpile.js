@@ -388,6 +388,7 @@ async function startExecution() {
   if (typeof setBaudLabel === 'function') setBaudLabel(0);
 
   const rawCode = $('code-input').value;
+  sketchSnapshot = rawCode;
   const warnings = circuitWarnings(rawCode);
   const jsCode = transpileArduinoCode(rawCode);
   $('serial-out').innerText = '-- Sketch started --\n' + (warnings.length ? warnings.map(w => '[Circuit] ' + w).join('\n') + '\n' : '');
@@ -449,31 +450,16 @@ function stopExecution() {
   if (typeof updateVisualOutputs === 'function') updateVisualOutputs();
   const vEl = $('scope-voltage');
   if (vEl) vEl.innerText = '0.0 V';
-  const btn = $('run-btn');
-  if (btn) {
-    btn.classList.remove('is-stop', 'btn-danger');
-    btn.classList.add('btn-primary');
-    btn.title = 'Run';
-    btn.setAttribute('aria-label', 'Run');
-    const word = btn.querySelector('.run-word');
-    if (word) word.textContent = 'Run';
-  }
+  if (typeof paintRunButtons === 'function') paintRunButtons(false);
 }
 
 function toggleExecution() {
+  if (isRunning && typeof codeDirty === 'function' && codeDirty()) { restartRun(); return; }
   if (isRunning) {
     stopExecution();
   } else {
-    const btn = $('run-btn');
-    if (btn) {
-      btn.classList.add('is-stop', 'btn-danger');
-      btn.classList.remove('btn-primary');
-      btn.title = 'Stop';
-      btn.setAttribute('aria-label', 'Stop');
-      const word = btn.querySelector('.run-word');
-      if (word) word.textContent = 'Stop';
-    }
     startExecution();
+    if (typeof paintRunButtons === 'function') paintRunButtons(true);
   }
 }
 

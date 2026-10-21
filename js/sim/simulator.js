@@ -23,6 +23,7 @@ let projectDirty = false;
 let scopeData = new Array(80).fill(0);
 let scopeAnimId = null;
 let executionStartTime = 0;
+let sketchSnapshot = '';
 
 let audioCtx = null;
 let activeOscillators = {};
@@ -41,7 +42,7 @@ const COMP_SPECS = {
   led_g: { name: '🟢 LED (Green)', pins: ['ANODE', 'CATHODE'], color: '#22c55e' },
   led_b: { name: '🔵 LED (Blue)', pins: ['ANODE', 'CATHODE'], color: '#3b82f6' },
   rgb: { name: '🌈 RGB LED', pins: ['R', 'G', 'B', 'GND'] },
-  btn: { name: '🔘 Push Button', pins: ['PIN1', 'PIN2'] },
+  btn: { name: '🔘 Push Button', pins: ['PIN1', 'PIN2', 'PIN3', 'PIN4'] },
   pot: { name: '🎛 Potentiometer', pins: ['VCC', 'OUT', 'GND'] },
   ultrasonic: { name: '🦇 HC-SR04', pins: ['VCC', 'TRIG', 'ECHO', 'GND'] },
   servo: { name: '🦾 Servo Motor', pins: ['PWM', 'VCC', 'GND'] },
@@ -66,20 +67,15 @@ const COMP_SPECS = {
 window.addEventListener('keydown', (e) => {
   if (e.code === 'Space' && document.activeElement.tagName !== 'TEXTAREA' && document.activeElement.tagName !== 'INPUT') {
     e.preventDefault();
-    components.filter(c => c.type === 'btn').forEach(btn => {
-      btn.state.pressed = true;
-    });
-    renderComponents();
+    if (e.repeat) return;
+    components.filter(c => c.type === 'btn').forEach(btn => setCompVal(btn.id, 'pressed', true));
   }
 });
 
 window.addEventListener('keyup', (e) => {
   if (e.code === 'Space' && document.activeElement.tagName !== 'TEXTAREA' && document.activeElement.tagName !== 'INPUT') {
     e.preventDefault();
-    components.filter(c => c.type === 'btn').forEach(btn => {
-      btn.state.pressed = false;
-    });
-    renderComponents();
+    components.filter(c => c.type === 'btn').forEach(btn => setCompVal(btn.id, 'pressed', false));
   }
 });
 
@@ -203,8 +199,9 @@ function setBoard(id) {
 function autoWireColor(type, pinId) {
   if (type === 'bb') {
     const n = holeNet(pinId);
-    if (n === 'tp' || n === 'bp') return '#dc2626';
-    if (n === 'tn' || n === 'bn') return '#171717';
+    if (!n) return null;
+    if (/p/.test(n) && !/n/.test(n)) return '#dc2626';
+    if (/n/.test(n)) return '#171717';
     return null;
   }
   if (type !== 'ard') return null;
@@ -224,7 +221,7 @@ function highlightSelectedPin(target, enable) {
   let selector = target.type === 'ard'
     ? `.pin-node[data-pin="${target.pinId}"]`
     : target.type === 'bb'
-      ? `.bb-hole[data-hole="${target.pinId}"]`
+      ? `.bb-hole[data-hole="${CSS.escape(target.pinId)}"]`
       : `.term-pin[data-pin-id="${target.pinId}"]`;
   const el = document.querySelector(selector);
   if (el) {
@@ -344,7 +341,26 @@ function applyCanvasBg(index) {
 function cycleCanvasBg() {
   applyCanvasBg(canvasBgIndex + 1);
 }
+function codeDirty() {
+  const area = $('code-input');
+  return !!(isRunning && area && area.value !== sketchSnapshot);
+}
+function paintRunButtons(running) {
+  const rerun = !!(running && codeDirty());
+  const stop = !!(running && !rerun);
+  document.querySelectorAll('.run-ctl').forEach(btn => {
+    btn.classList.toggle('is-stop', stop);
+    btn.classList.toggle('btn-danger', stop);
+    btn.classList.toggle('btn-primary', !stop);
+    const label = stop ? 'Stop' : 'Run';
+    btn.title = rerun ? 'Run the changed sketch' : label;
+    btn.setAttribute('aria-label', label);
+    const word = btn.querySelector('.run-word');
+    if (word) word.textContent = label;
+  });
+}
 function onViewWheel(e) {
+  if (document.body.classList.contains('beginner')) return;
   e.preventDefault();
   const ws = $('workspace').getBoundingClientRect();
   const mx = e.clientX - ws.left;
@@ -568,6 +584,7 @@ function renderWires() {
       <path d="${d}" stroke="${rim}" stroke-width="6.2"/>
       <path class="jumper-core" d="${d}" stroke="${w.color}" stroke-width="3.3"/>
       <path d="${d}" stroke="rgba(255,255,255,.42)" stroke-width="1.2" pointer-events="none"/>
+      <path class="jumper-flow" d="${d}" pointer-events="none"/>
       <path d="${d}" stroke="transparent" stroke-width="14" onclick="recolorWire('${w.id}', event)" ondblclick="removeWire('${w.id}')"/>
     </g>`;
   }).join('') + previewMarkup();
@@ -822,12 +839,17 @@ function layoutComponentsParallel() {
   const size = boardSize();
   const needX = Math.max(x - PART_GAP + 28, arduinoPos.x + size.w + 24);
   const needY = arduinoPos.y + size.h + 20;
-  const fitX = ws && needX > 0 ? (ws.clientWidth - 8) / needX : 1;
-  const fitY = ws && needY > 0 ? (ws.clientHeight - 8) / needY : 1;
-  view.x = 0;
-  view.y = 0;
-  view.z = Math.max(0.45, Math.min(1, fitX, fitY));
+  const narrow = !!(ws && ws.clientWidth < 900);
+  const insetX = narrow ? 4 : 0;
+  const insetY = narrow ? 58 : 0;
+  const fitX = ws && needX > 0 ? (ws.clientWidth - insetX - 12) / needX : 1;
+  const fitY = ws && needY > 0 ? (ws.clientHeight - insetY - (narrow ? 48 : 8)) / needY : 1;
+  view.x = insetX;
+  view.y = insetY;
+  view.z = Math.max(narrow ? 0.18 : 0.45, Math.min(1, fitX, fitY));
   applyView();
+  placeServoEnds();
+  renderWires();
 }
 
 function nextPartPos() {
@@ -870,6 +892,146 @@ function removeComponent(id) {
   histRemember();
 }
 
+function servoSvg(id, angle) {
+  const turn = Math.round(Number(angle) || 0);
+  return `<svg class="servo-body" viewBox="0 0 320 148" aria-hidden="true">
+    <path d="M150 56 H22 V70" fill="none" stroke="#f97316" stroke-width="5.5" stroke-linejoin="round" stroke-linecap="round"/>
+    <path d="M150 63 H66 V70" fill="none" stroke="#ef4444" stroke-width="5.5" stroke-linejoin="round" stroke-linecap="round"/>
+    <path d="M150 70 H110 V70" fill="none" stroke="#7c3e12" stroke-width="5.5" stroke-linejoin="round" stroke-linecap="round"/>
+    <rect data-end="PWM" x="4" y="70" width="36" height="18" rx="3" fill="#f97316"/>
+    <rect data-end="VCC" x="48" y="70" width="36" height="18" rx="3" fill="#ef4444"/>
+    <rect data-end="GND" x="92" y="70" width="36" height="18" rx="3" fill="#7c3e12"/>
+    <rect x="140" y="52" width="18" height="48" rx="3" fill="#52525b"/>
+    <rect x="146" y="60" width="7" height="32" rx="3" fill="#e7e5e4"/>
+    <rect x="286" y="52" width="18" height="48" rx="3" fill="#52525b"/>
+    <rect x="292" y="60" width="7" height="32" rx="3" fill="#e7e5e4"/>
+    <rect x="154" y="48" width="138" height="56" rx="6" fill="#3f3f46"/>
+    <rect x="160" y="51" width="126" height="11" rx="3" fill="#5c5c66"/>
+  </svg>
+  <div class="servo-horn" id="servo-horn-${id}">
+    <div class="horn-bar" style="transform:rotate(${turn - 180}deg)"><i></i><i></i><i></i></div>
+    <div class="horn-hub" style="transform:rotate(${turn - 180}deg)"><b></b><b></b></div>
+  </div>`;
+}
+
+function paintServoHorn(id, angle) {
+  const horn = $('servo-horn-' + id);
+  if (!horn) return;
+  const a = Math.round(Number(angle) || 0);
+  const bar = horn.querySelector('.horn-bar');
+  const hub = horn.querySelector('.horn-hub');
+  if (bar) bar.style.setProperty('transform', 'rotate(' + (a - 180) + 'deg)', 'important');
+  if (hub) hub.style.setProperty('transform', 'rotate(' + (a - 180) + 'deg)', 'important');
+}
+
+function placeServoEnds() {
+  document.querySelectorAll('.part-servo:not(.seated)').forEach(box => {
+    const host = box.querySelector('.terminals') || box;
+    const hostR = host.getBoundingClientRect();
+    const scale = host.offsetWidth ? hostR.width / host.offsetWidth : 1;
+    if (!scale) return;
+    box.querySelectorAll('.term-pin').forEach(pin => {
+      const tip = box.querySelector('[data-end="' + pin.title + '"]');
+      if (!tip) return;
+      const t = tip.getBoundingClientRect();
+      const w = pin.offsetWidth || 12;
+      const h = pin.offsetHeight || 12;
+      pin.style.left = Math.round((t.left + t.width / 2 - hostR.left) / scale - w / 2) + 'px';
+      pin.style.top = Math.round((t.top + t.height / 2 - hostR.top) / scale - h / 2) + 'px';
+      pin.style.margin = '0';
+    });
+  });
+}
+
+function pushButtonSvg(id) {
+  const u = String(id).replace(/[^A-Za-z0-9_-]/g, '') || 'btn';
+  const g = name => u + '-' + name;
+  return `<svg class="btn-art" viewBox="0 0 200 200" aria-hidden="true">
+    <defs>
+      <linearGradient id="${g('pin')}" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stop-color="#888888"/><stop offset="50%" stop-color="#d0d0d0"/><stop offset="100%" stop-color="#666666"/>
+      </linearGradient>
+      <linearGradient id="${g('strap')}" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stop-color="#ffffff" stop-opacity="0.6"/><stop offset="50%" stop-color="#cccccc" stop-opacity="0.4"/><stop offset="100%" stop-color="#aaaaaa" stop-opacity="0.5"/>
+      </linearGradient>
+      <linearGradient id="${g('plate')}" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#f0f0f0"/><stop offset="50%" stop-color="#e1e1e1"/><stop offset="100%" stop-color="#cccccc"/>
+      </linearGradient>
+      <radialGradient id="${g('cap')}" cx="35%" cy="35%" r="65%">
+        <stop offset="0%" stop-color="#00b300"/><stop offset="50%" stop-color="#008000"/><stop offset="85%" stop-color="#004d00"/><stop offset="100%" stop-color="#001a00"/>
+      </radialGradient>
+      <filter id="${g('bodyShadow')}" x="-12%" y="-12%" width="124%" height="124%">
+        <feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#000" flood-opacity="0.35"/>
+      </filter>
+      <filter id="${g('capShadow')}" x="-20%" y="-20%" width="140%" height="140%">
+        <feDropShadow dx="0" dy="4" stdDeviation="3" flood-color="#000" flood-opacity="0.4"/>
+      </filter>
+    </defs>
+    <g fill="url(#${g('pin')})" stroke="#444444" stroke-width="1.5">
+      <rect x="22" y="66" width="30" height="12" rx="2"/><rect x="18" y="70" width="8" height="4" rx="1"/>
+      <rect x="22" y="122" width="30" height="12" rx="2"/><rect x="18" y="126" width="8" height="4" rx="1"/>
+      <rect x="148" y="66" width="30" height="12" rx="2"/><rect x="174" y="70" width="8" height="4" rx="1"/>
+      <rect x="148" y="122" width="30" height="12" rx="2"/><rect x="174" y="126" width="8" height="4" rx="1"/>
+    </g>
+    <rect x="42" y="42" width="116" height="116" rx="8" fill="#333333" stroke="#222222" stroke-width="3" filter="url(#${g('bodyShadow')})"/>
+    <rect x="48" y="48" width="104" height="104" rx="5" fill="url(#${g('plate')})" stroke="#888888" stroke-width="1.5"/>
+    <rect x="48" y="64" width="104" height="16" fill="url(#${g('strap')})"/>
+    <rect x="48" y="120" width="104" height="16" fill="url(#${g('strap')})"/>
+    <g fill="#111111">
+      <circle cx="58" cy="58" r="4.5"/><circle cx="142" cy="58" r="4.5"/>
+      <circle cx="58" cy="142" r="4.5"/><circle cx="142" cy="142" r="4.5"/>
+    </g>
+    <circle cx="100" cy="100" r="41" fill="#262626" stroke="#1a1a1a" stroke-width="2"/>
+    <circle cx="100" cy="100" r="39.5" fill="none" stroke="#4a4a4a" stroke-width="1"/>
+    <g class="plunger">
+      <circle cx="100" cy="100" r="38" fill="url(#${g('cap')})" filter="url(#${g('capShadow')})"/>
+      <circle cx="100" cy="100" r="36.5" fill="none" stroke="#00b300" stroke-opacity="0.5" stroke-width="1.5"/>
+    </g>
+  </svg>`;
+}
+
+function pressAttrs(id) {
+  return `onmousedown="setCompVal('${id}', 'pressed', true)" onmouseup="setCompVal('${id}', 'pressed', false)" onmouseleave="setCompVal('${id}', 'pressed', false)" ontouchstart="setCompVal('${id}', 'pressed', true)" ontouchend="setCompVal('${id}', 'pressed', false)"`;
+}
+
+function looseButtonBody(c) {
+  const down = c.state.pressed ? ' down' : '';
+  return `<div class="btn-face${down}">${pushButtonSvg(c.id)}<button type="button" class="tact svg-btn plunger-hit${down}" aria-pressed="${c.state.pressed ? 'true' : 'false'}" aria-label="Press" title="Press" ${pressAttrs(c.id)}></button></div>`;
+}
+
+function seatedButtonBody(c, lay) {
+  const dot = BB.hole / 2;
+  const pt = name => [lay.pins[name].left + dot, lay.pins[name].top + dot];
+  const pins = ['PIN1', 'PIN2', 'PIN3', 'PIN4'].filter(name => lay.pins[name]).map(pt);
+  const cx = pins.reduce((sum, p) => sum + p[0], 0) / pins.length;
+  const cy = pins.reduce((sum, p) => sum + p[1], 0) / pins.length;
+  const legs = pins.map(([x, y]) => {
+    const dx = x - cx, dy = y - cy;
+    const len = Math.hypot(dx, dy) || 1;
+    return `<line x1="${(cx + dx / len * 8).toFixed(1)}" y1="${(cy + dy / len * 8).toFixed(1)}" x2="${x.toFixed(1)}" y2="${y.toFixed(1)}" stroke="#b8b8b8" stroke-width="2.4" stroke-linecap="square"/>`;
+  }).join('');
+  const down = c.state.pressed ? ' down' : '';
+  const cap = 18;
+  const g = String(c.id).replace(/[^A-Za-z0-9_-]/g, '') + '-seat';
+  return `<div class="seat-btn">
+    <svg class="seat-legs" viewBox="0 0 ${lay.w} ${lay.h}">${legs}</svg>
+    <div class="btn-face${down}" style="left:${(cx - cap / 2).toFixed(1)}px;top:${(cy - cap / 2).toFixed(1)}px;width:${cap}px;height:${cap}px">
+      <svg class="btn-art" viewBox="0 0 40 40" aria-hidden="true">
+        <defs>
+          <radialGradient id="${g}" cx="35%" cy="35%" r="65%">
+            <stop offset="0%" stop-color="#00b300"/><stop offset="50%" stop-color="#008000"/><stop offset="85%" stop-color="#004d00"/><stop offset="100%" stop-color="#001a00"/>
+          </radialGradient>
+        </defs>
+        <rect x="1" y="1" width="38" height="38" rx="4" fill="#333" stroke="#222" stroke-width="2"/>
+        <rect x="4" y="4" width="32" height="32" rx="2" fill="#e6e6e6" stroke="#888"/>
+        <circle cx="20" cy="20" r="13" fill="#262626"/>
+        <g class="plunger"><circle cx="20" cy="20" r="12" fill="url(#${g})"/></g>
+      </svg>
+      <button type="button" class="tact svg-btn plunger-hit${down}" aria-pressed="${c.state.pressed ? 'true' : 'false'}" aria-label="Press" title="Press" ${pressAttrs(c.id)}></button>
+    </div>
+  </div>`;
+}
+
 function renderComponents() {
   touchAdj();
   const container = $('comps-container');
@@ -877,6 +1039,8 @@ function renderComponents() {
   container.innerHTML = components.map(c => {
     const spec = COMP_SPECS[c.type];
     if (!spec) return '';
+    const lay = c.seat ? seatedLayout(c) : null;
+    if (lay) { c.x = lay.x; c.y = lay.y; }
     let bodyHtml = '';
     
     if (c.type === 'led_r' || c.type === 'led_y' || c.type === 'led_g' || c.type === 'led_b') {
@@ -885,7 +1049,7 @@ function renderComponents() {
     } else if (c.type === 'rgb') {
       bodyHtml = `<div class="led-part rgb-led" id="rgb-node-${c.id}"><svg viewBox="0 0 48 64" width="40" height="52"><rect x="20" y="40" width="3" height="18" fill="#94a3b8"/><rect x="26" y="44" width="3" height="14" fill="#94a3b8"/><path class="dome" d="M10 40 L10 22 A14 14 0 0 1 38 22 L38 40 Z"/><ellipse cx="24" cy="40" rx="14" ry="4" fill="#27272a"/></svg></div>`;
     } else if (c.type === 'btn') {
-      bodyHtml = `<button class="tact svg-btn${c.state.pressed ? ' down' : ''}" onmousedown="setCompVal('${c.id}', 'pressed', true)" onmouseup="setCompVal('${c.id}', 'pressed', false)" onmouseleave="setCompVal('${c.id}', 'pressed', false)" ontouchstart="setCompVal('${c.id}', 'pressed', true)" ontouchend="setCompVal('${c.id}', 'pressed', false)" title="Press"><img src="assets/svg/button.svg" alt="" draggable="false"></button>`;
+      bodyHtml = lay && lay.kind === 'btn' ? seatedButtonBody(c, lay) : looseButtonBody(c);
     } else if (c.type === 'pot') {
       const ang = (Number(c.state.value) / 1023) * 270 - 135;
       bodyHtml = `<div class="pot-svg"><img class="part-art" src="assets/svg/pot.svg" alt="" draggable="false"><div class="pot-knob" style="transform:rotate(${ang}deg)"></div></div><span class="val-lbl">${labelFor(c)}</span>`;
@@ -905,10 +1069,7 @@ function renderComponents() {
       bodyHtml = `<div class="seg-svg"><img class="part-art" src="assets/svg/seg7.svg" alt="" draggable="false"><div class="seg-display" id="seg-${c.id}">${c.state.segNum}</div></div>`;
     } else if (c.type === 'servo') {
       bodyHtml = `
-        <div class="servo-svg">
-          <img class="part-art" src="assets/svg/servo.svg" alt="" draggable="false">
-          <div class="servo-horn" id="servo-horn-${c.id}" style="transform:rotate(${c.state.angle}deg)"></div>
-        </div>
+        <div class="servo-svg">${servoSvg(c.id, c.state.angle)}</div>
         <span class="val-lbl" id="servo-lbl-${c.id}">${c.state.angle}°</span>
       `;
     } else if (c.type === 'lcd') {
@@ -931,19 +1092,25 @@ function renderComponents() {
       bodyHtml = `<div class="bat-body"><img class="part-art" src="assets/svg/battery.svg" alt="" draggable="false"><span class="val-lbl">${labelFor(c)}</span></div>`;
     }
 
-    const lay = c.seat ? seatedLayout(c) : null;
-    if (lay) { c.x = lay.x; c.y = lay.y; }
     const pinLabel = { ANODE: '+', CATHODE: '−', POS: '+', PIN1: '1', PIN2: '2', OUT: 'S', DATA: 'DAT', PWM: 'SIG', A: '1', B: '2', NEG: '−' };
     const sideOf = { A: 'l', B: 'r', NEG: 'l', POS: 'r' };
+    const servoEnds = { PWM: [17, 77], VCC: [56, 77], GND: [94, 77] };
     const termPinsHtml = spec.pins.map(p => {
-      const st = lay && lay.pins[p] ? ` style="left:${lay.pins[p].left}px;top:${lay.pins[p].top}px"` : '';
+      const looseServo = c.type === 'servo' && !lay && servoEnds[p];
+      const st = lay && lay.pins[p]
+        ? ` style="left:${lay.pins[p].left}px;top:${lay.pins[p].top}px"`
+        : looseServo
+          ? ` style="left:${servoEnds[p][0]}px;top:${servoEnds[p][1]}px;margin:0"`
+          : '';
       const side = sideOf[p] ? ` data-side="${sideOf[p]}"` : '';
       return `<div class="term-pin" data-pin-id="${c.id}-${p}" data-lbl="${pinLabel[p] || p}" title="${p}"${side}${st}></div>`;
     }).join('');
     const side = (c.type === 'res' || c.type === 'bat') ? ' side-pins' : '';
 
+    const artVars = lay && lay.art ? `--art-x:${lay.art.x}px;--art-y:${lay.art.y}px;--art-w:${lay.art.w}px;--art-h:${lay.art.h}px;` : '';
+    const fit = lay ? (lay.kind === 'btn' ? ' fit-btn' : lay.kind === 'leads' ? ' fit-leads' : ' fit-mod') : '';
     return `
-      <div class="comp-box part part-${c.type}${side}${lay ? ' seated' : ''}${lay && lay.flat ? ' flat' : ''}${pickedId === c.id ? ' picked' : ''}${selectedIds.has(c.id) ? ' selected' : ''}" id="comp-${c.id}" style="left:${c.x}px; top:${c.y}px;${lay ? `width:${lay.w}px;height:${lay.h}px;` : ''}" onmousedown="dragStart(event, '${c.id}')" ontouchstart="dragStart(event, '${c.id}')">
+      <div class="comp-box part part-${c.type}${side}${lay ? ' seated' : ''}${fit}${pickedId === c.id ? ' picked' : ''}${selectedIds.has(c.id) ? ' selected' : ''}" id="comp-${c.id}" style="left:${c.x}px; top:${c.y}px;${lay ? `width:${lay.w}px;height:${lay.h}px;${artVars}` : ''}" onmousedown="dragStart(event, '${c.id}')" ontouchstart="dragStart(event, '${c.id}')">
         <span class="part-name">${PART_NAMES[c.type] || spec.name}</span>
         <button class="comp-close" onclick="removeComponent('${c.id}')" title="Remove">✕</button>
         <div class="comp-body">${bodyHtml}</div>
@@ -953,6 +1120,8 @@ function renderComponents() {
   }).join('');
 
   markOccupiedHoles();
+  placeServoEnds();
+  if (typeof renderWires === 'function') renderWires();
   updateVisualOutputs();
 }
 
@@ -1212,10 +1381,15 @@ $('arduino-uno').addEventListener('touchstart', startBoardDrag, { passive: true 
 /* Loaded in order by js/sim/boot.js. Do not load this file on its own. */
 /* ===== breadboard: rails + 5-hole rows, parts snap in, wires land on holes ===== */
 const BB = { cols: 24, pitch: 14, hole: 5 };
+const BB_FULL = { cols: 63, split: 31 };
+let bbFullOn = false;
+let bbFullPos = { x: 12, y: 680 };
 
-function bbMetrics() {
+function bbMetrics(full) {
   const p = BB.pitch;
+  const cols = full ? BB_FULL.cols : BB.cols;
   const lab = 16;
+  const right = full ? 18 : 0;
   let y = 4;
   const numY = y;
   y += 12;
@@ -1227,50 +1401,101 @@ function bbMetrics() {
   for (let i = 0; i < 5; i++) rows['abcde'[i]] = y + i * p;
   y += 5 * p + 12;
   for (let i = 0; i < 5; i++) rows['fghij'[i]] = y + i * p;
-  y += 5 * p + 6;
+  y += 5 * p + (full ? 4 : 6);
+  const botNumY = full ? y : 0;
+  if (full) y += 14;
   rails['b+'] = y; y += p;
   rails['b-'] = y; y += p;
   y += 8;
-  return { lab, rails, rows, numY, width: lab + BB.cols * p + 8, height: y };
+  return { lab, right, rails, rows, numY, botNumY, cols, width: lab + cols * p + right + 8, height: y, full };
 }
 
 function parseHole(id) {
-  const rail = String(id).match(/^(t\+|t-|b\+|b-)(\d+)$/);
-  if (rail) return { rail: rail[1], col: +rail[2], row: null };
-  const cell = String(id).match(/^(\d+)([a-j])$/);
-  if (cell) return { rail: null, col: +cell[1], row: cell[2] };
+  const s = String(id);
+  const full = s.charAt(0) === 'F';
+  const body = full ? s.slice(1) : s;
+  const rail = body.match(/^(t\+|t-|b\+|b-)(\d+)$/);
+  if (rail) return { full, rail: rail[1], col: +rail[2], row: null };
+  const cell = body.match(/^(\d+)([a-j])$/);
+  if (cell) return { full, rail: null, col: +cell[1], row: cell[2] };
   return null;
 }
 
 function holeNet(id) {
   const p = parseHole(id);
-  if (!p || p.col < 1 || p.col > BB.cols) return null;
-  if (p.rail === 't+') return 'tp';
-  if (p.rail === 't-') return 'tn';
-  if (p.rail === 'b+') return 'bp';
-  if (p.rail === 'b-') return 'bn';
-  if (p.row && 'abcde'.includes(p.row)) return 't' + p.col;
-  if (p.row && 'fghij'.includes(p.row)) return 'b' + p.col;
+  const cols = p && p.full ? BB_FULL.cols : BB.cols;
+  if (!p || p.col < 1 || p.col > cols) return null;
+  const tag = p.full ? 'F' : '';
+  if (p.rail) {
+    const side = p.full ? (p.col > BB_FULL.split ? 'R' : 'L') : '';
+    if (p.rail === 't+') return tag + 'tp' + side;
+    if (p.rail === 't-') return tag + 'tn' + side;
+    if (p.rail === 'b+') return tag + 'bp' + side;
+    if (p.rail === 'b-') return tag + 'bn' + side;
+  }
+  if (p.row && 'abcde'.includes(p.row)) return tag + 't' + p.col;
+  if (p.row && 'fghij'.includes(p.row)) return tag + 'b' + p.col;
   return null;
 }
 
 function holeCenter(id) {
   const p = parseHole(id);
-  const m = bbMetrics();
   if (!p) return { x: 0, y: 0 };
+  const m = bbMetrics(p.full);
+  const pos = p.full ? bbFullPos : bbPos;
   const top = p.rail ? m.rails[p.rail] : m.rows[p.row];
   return {
-    x: bbPos.x + m.lab + (p.col - 1) * BB.pitch + BB.pitch / 2,
-    y: bbPos.y + top + BB.pitch / 2
+    x: pos.x + m.lab + (p.col - 1) * BB.pitch + BB.pitch / 2,
+    y: pos.y + top + BB.pitch / 2
   };
 }
 
+function bbSeat() {
+  if (bbFullOn) return { cols: BB_FULL.cols, pre: 'F' };
+  if (bbOn) return { cols: BB.cols, pre: '' };
+  return null;
+}
+
+function breadboardState() {
+  if (!bbOn && !bbFullOn) return null;
+  const state = { x: bbPos.x, y: bbPos.y, on: !!bbOn };
+  if (bbFullOn) state.full = { x: bbFullPos.x, y: bbFullPos.y, on: true };
+  return state;
+}
+
+function applyBreadboardState(data) {
+  if (data && data.on && typeof data.x === 'number') {
+    bbOn = true;
+    bbPos = { x: data.x, y: data.y };
+  } else bbOn = false;
+  if (data && data.full && data.full.on && typeof data.full.x === 'number') {
+    bbFullOn = true;
+    bbFullPos = { x: data.full.x, y: data.full.y };
+  } else bbFullOn = false;
+}
+
 function applyBbPos() {
-  const el = $('breadboard');
-  if (!el) return;
-  el.classList.toggle('off', !bbOn);
-  el.style.left = bbPos.x + 'px';
-  el.style.top = bbPos.y + 'px';
+  const mini = $('breadboard');
+  if (mini) {
+    mini.classList.toggle('off', !bbOn);
+    mini.style.left = bbPos.x + 'px';
+    mini.style.top = bbPos.y + 'px';
+  }
+  const full = $('breadboard-full');
+  if (full) {
+    full.classList.toggle('off', !bbFullOn);
+    full.style.left = bbFullPos.x + 'px';
+    full.style.top = bbFullPos.y + 'px';
+  }
+}
+function clearBoardLinks(full) {
+  components.forEach(c => {
+    if (!c.seat) return;
+    const here = Object.values(c.seat).some(id => (String(id).charAt(0) === 'F') === full);
+    if (here) c.seat = null;
+  });
+  wires = wires.filter(w => ![w.from, w.to].some(ref =>
+    ref.type === 'bb' && (String(ref.pinId).charAt(0) === 'F') === full));
 }
 function addBreadboard() {
   if (bbOn) return;
@@ -1282,67 +1507,111 @@ function addBreadboard() {
 function removeBreadboard() {
   if (!bbOn) return;
   bbOn = false;
-  components.forEach(c => { c.seat = null; });
-  wires = wires.filter(w => w.from.type !== 'bb' && w.to.type !== 'bb');
+  clearBoardLinks(false);
+  applyBbPos();
+  renderComponents();
+  renderWires();
+  histRemember();
+}
+function addFullBreadboard() {
+  if (bbFullOn) return;
+  bbFullOn = true;
+  bbFullPos = { x: arduinoPos.x, y: bbOn ? bbPos.y + 280 : arduinoPos.y + 380 };
+  applyBbPos();
+  histRemember();
+}
+function removeFullBreadboard() {
+  if (!bbFullOn) return;
+  bbFullOn = false;
+  clearBoardLinks(true);
   applyBbPos();
   renderComponents();
   renderWires();
   histRemember();
 }
 
-function renderBreadboard() {
-  const el = $('breadboard');
+function railLines(m, rail, color) {
+  const top = m.rails[rail] + BB.pitch / 2 - 1;
+  if (!m.full) {
+    return `<i class="bb-line" style="left:${m.lab}px;top:${top}px;width:${m.cols * BB.pitch}px;background:${color}"></i>`;
+  }
+  const gap = 10;
+  const leftW = BB_FULL.split * BB.pitch - gap / 2;
+  const rightX = m.lab + BB_FULL.split * BB.pitch + gap / 2;
+  const rightW = (m.cols - BB_FULL.split) * BB.pitch - gap / 2;
+  return `<i class="bb-line" style="left:${m.lab}px;top:${top}px;width:${leftW}px;background:${color}"></i>`
+    + `<i class="bb-line" style="left:${rightX}px;top:${top}px;width:${rightW}px;background:${color}"></i>`;
+}
+
+function renderBoardEl(el, full) {
   if (!el) return;
-  const m = bbMetrics();
+  const m = bbMetrics(full);
   const p = BB.pitch;
   const h = BB.hole;
   const ox = (p - h) / 2;
+  const pre = full ? 'F' : '';
   el.style.width = m.width + 'px';
   el.style.height = m.height + 'px';
   const holes = [];
   const labs = [];
-  for (let col = 1; col <= BB.cols; col++) {
+  for (let col = 1; col <= m.cols; col++) {
     const x = m.lab + (col - 1) * p;
-    labs.push(`<span class="bb-lab bb-num" style="left:${x}px;top:${m.numY}px">${col}</span>`);
+    const numbered = !full || col === 1 || col % 5 === 0;
+    if (numbered) {
+      const left = full ? x + p / 2 - 9 : x;
+      labs.push(`<span class="bb-lab bb-num" style="left:${left}px;top:${m.numY}px">${col}</span>`);
+      if (full) labs.push(`<span class="bb-lab bb-num" style="left:${left}px;top:${m.botNumY}px">${col}</span>`);
+    }
     for (const rail of ['t+', 't-', 'b+', 'b-']) {
-      const id = rail + col;
+      const id = pre + rail + col;
       const mark = rail.endsWith('+') ? '+' : '−';
       holes.push(`<i class="bb-hole" data-hole="${id}" title="${mark} ${col}" style="left:${x + ox}px;top:${m.rails[rail] + ox}px"></i>`);
     }
     for (const row of 'abcdefghij') {
-      const id = col + row;
+      const id = pre + col + row;
       holes.push(`<i class="bb-hole" data-hole="${id}" title="${col}${row}" style="left:${x + ox}px;top:${m.rows[row] + ox}px"></i>`);
     }
   }
   for (const row of 'abcdefghij') {
     labs.push(`<span class="bb-lab" style="left:1px;top:${m.rows[row]}px">${row}</span>`);
+    if (full) labs.push(`<span class="bb-lab" style="left:${m.width - 15}px;top:${m.rows[row]}px">${row}</span>`);
   }
   [['t+', 'plus', '+'], ['t-', 'minus', '−'], ['b+', 'plus', '+'], ['b-', 'minus', '−']].forEach(([rail, cls, ch]) => {
     labs.push(`<span class="bb-lab bb-pow ${cls}" style="left:1px;top:${m.rails[rail]}px">${ch}</span>`);
+    if (full) labs.push(`<span class="bb-lab bb-pow ${cls}" style="left:${m.width - 14}px;top:${m.rails[rail]}px">${ch}</span>`);
   });
-  const line = (rail, color) => `<i class="bb-line" style="left:${m.lab}px;top:${m.rails[rail] + p / 2 - 1}px;width:${BB.cols * p}px;background:${color}"></i>`;
   const trenchTop = m.rows.e + p;
+  const silk = full ? '' : `<span class="bb-silk" style="top:${trenchTop}px;line-height:${m.rows.f - trenchTop}px">BREADBOARD</span>`;
+  const closer = full ? 'removeFullBreadboard()' : 'removeBreadboard()';
   el.innerHTML = `
-    <i class="bb-trench" style="left:${m.lab}px;top:${trenchTop}px;width:${BB.cols * p}px;height:${m.rows.f - trenchTop}px"></i>
-    <span class="bb-silk" style="top:${trenchTop}px;line-height:${m.rows.f - trenchTop}px">BREADBOARD</span>
-    ${line('t+', '#dc2626')}${line('t-', '#2563eb')}${line('b+', '#dc2626')}${line('b-', '#2563eb')}
-    <button type="button" class="bb-close" onclick="removeBreadboard()" title="Remove">✕</button>
+    <i class="bb-trench" style="left:${m.lab}px;top:${trenchTop}px;width:${m.cols * p}px;height:${m.rows.f - trenchTop}px"></i>
+    ${silk}
+    ${railLines(m, 't+', '#dc2626')}${railLines(m, 't-', '#2563eb')}${railLines(m, 'b+', '#dc2626')}${railLines(m, 'b-', '#2563eb')}
+    <button type="button" class="bb-close" onclick="${closer}" title="Remove">✕</button>
     ${labs.join('')}${holes.join('')}`;
+}
+
+function renderBreadboard() {
+  renderBoardEl($('breadboard'), false);
+  renderBoardEl($('breadboard-full'), true);
   applyBbPos();
 }
 
 function nearestGridHole(x, y, maxDist) {
-  const m = bbMetrics();
   let best = null;
   let bd = maxDist;
-  for (let col = 1; col <= BB.cols; col++) {
-    for (const row of 'abcdefghij') {
-      const cx = bbPos.x + m.lab + (col - 1) * BB.pitch + BB.pitch / 2;
-      const cy = bbPos.y + m.rows[row] + BB.pitch / 2;
-      const d = Math.hypot(x - cx, y - cy);
-      if (d < bd) { bd = d; best = { col, row }; }
+  [[false, bbOn, bbPos], [true, bbFullOn, bbFullPos]].forEach(([full, on, pos]) => {
+    if (!on) return;
+    const m = bbMetrics(full);
+    for (let col = 1; col <= m.cols; col++) {
+      for (const row of 'abcdefghij') {
+        const cx = pos.x + m.lab + (col - 1) * BB.pitch + BB.pitch / 2;
+        const cy = pos.y + m.rows[row] + BB.pitch / 2;
+        const d = Math.hypot(x - cx, y - cy);
+        if (d < bd) { bd = d; best = { col, row, full }; }
+      }
     }
-  }
+  });
   return best;
 }
 
@@ -1352,9 +1621,58 @@ function markOccupiedHoles() {
     if (!c.seat) return;
     Object.values(c.seat).forEach(id => taken.add(String(id)));
   });
-  document.querySelectorAll('#breadboard .bb-hole').forEach(el => {
+  document.querySelectorAll('.breadboard .bb-hole').forEach(el => {
     el.classList.toggle('occupied', taken.has(el.dataset.hole));
   });
+}
+
+const LEAD_ART = {
+  led_r: { w: 68, h: 92, pins: { ANODE: [0.309, 1], CATHODE: [0.662, 1] } },
+  led_y: { w: 68, h: 92, pins: { ANODE: [0.309, 1], CATHODE: [0.662, 1] } },
+  led_g: { w: 68, h: 92, pins: { ANODE: [0.309, 1], CATHODE: [0.662, 1] } },
+  led_b: { w: 68, h: 92, pins: { ANODE: [0.309, 1], CATHODE: [0.662, 1] } },
+  res: { w: 120, h: 36, pins: { A: [0.108, 0.5], B: [0.892, 0.5] } },
+  bat: { w: 140, h: 44, pins: { NEG: [0.079, 0.5], POS: [0.921, 0.5] } }
+};
+const MOD_ART = {
+  pot: [40, 40], ldr: [36, 28], soil: [36, 46], dht: [32, 42], pir: [56, 40],
+  ultrasonic: [124, 40], servo: [168, 96], relay: [90, 48], seg7: [56, 48],
+  lcd: [168, 64], oled: [150, 72], buz: [40, 32], lamp: [32, 42],
+  fan: [44, 44], pump: [48, 48], switch: [56, 24], rgb: [36, 46]
+};
+
+function fitLeadArt(pts, model) {
+  const used = pts.filter(p => model.pins[p.pin]);
+  if (used.length < 2) return null;
+  let a = used[0], b = used[1], best = -1;
+  for (let i = 0; i < used.length; i++) {
+    for (let j = i + 1; j < used.length; j++) {
+      const pa = model.pins[used[i].pin], pb = model.pins[used[j].pin];
+      const score = Math.abs(pb[0] - pa[0]) + Math.abs(pb[1] - pa[1]);
+      if (score > best) { best = score; a = used[i]; b = used[j]; }
+    }
+  }
+  const ax = model.pins[a.pin], bx = model.pins[b.pin];
+  const adx = bx[0] - ax[0], ady = bx[1] - ax[1];
+  let w, h;
+  if (Math.abs(adx) >= Math.abs(ady)) {
+    w = Math.abs((b.x - a.x) / adx);
+    h = w * model.h / model.w;
+  } else {
+    h = Math.abs((b.y - a.y) / ady);
+    w = h * model.w / model.h;
+  }
+  if (!isFinite(w) || w < 8 || !isFinite(h) || h < 8) return null;
+  return { x: a.x - ax[0] * w, y: a.y - ax[1] * h, w, h };
+}
+
+function fitModuleArt(type, pts) {
+  const size = MOD_ART[type] || [Math.max(pts.length * 12, 32), 36];
+  const xs = pts.map(p => p.x), ys = pts.map(p => p.y);
+  const cx = (Math.min(...xs) + Math.max(...xs)) / 2;
+  const top = Math.min(...ys);
+  const gap = 8;
+  return { x: cx - size[0] / 2, y: top - gap - size[1], w: size[0], h: size[1] };
 }
 
 function seatedLayout(c) {
@@ -1363,36 +1681,39 @@ function seatedLayout(c) {
   const pts = [];
   for (const pin of spec.pins) {
     const id = c.seat[pin];
-    const parsed = id && parseHole(id);
+    if (!id) continue;
+    const parsed = parseHole(id);
     if (!parsed || parsed.rail) return null;
     pts.push({ pin, ...holeCenter(id) });
   }
-  const xs = pts.map(p => p.x);
-  const ys = pts.map(p => p.y);
-  const minX = Math.min(...xs);
-  const maxX = Math.max(...xs);
-  const maxY = Math.max(...ys);
-  const dot = 4;
-  const flat = c.type === 'res' || c.type === 'bat';
-  if (flat) {
-    const boxW = Math.max(maxX - minX, 8);
-    const boxH = c.type === 'bat' ? 22 : 18;
-    const x = minX;
-    const y = (Math.min(...ys) + maxY) / 2 - boxH / 2;
-    const pins = {};
-    pts.forEach(p => { pins[p.pin] = { left: p.x - x - dot, top: p.y - y - dot }; });
-    return { x, y, w: boxW, h: boxH, pins, flat: true };
+  if (!pts.length) return null;
+  const dot = BB.hole / 2;
+  let art = null;
+  let kind = 'mod';
+  if (c.type === 'btn') kind = 'btn';
+  else if (LEAD_ART[c.type]) {
+    art = fitLeadArt(pts, LEAD_ART[c.type]);
+    kind = art ? 'leads' : 'mod';
   }
-  const wide = { lcd: 176, oled: 168, ultrasonic: 124, relay: 96, seg7: 84, servo: 78, rgb: 48 };
-  const tall = ['pot', 'ldr', 'ultrasonic', 'dht'].includes(c.type);
-  const boxW = Math.max(wide[c.type] || 52, maxX - minX + 20);
-  const pinFromTop = tall ? 86 : 46;
-  const boxH = pinFromTop + 8;
-  const x = (minX + maxX) / 2 - boxW / 2;
-  const y = maxY - pinFromTop;
+  if (!art && kind === 'mod') art = fitModuleArt(c.type, pts);
+  let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+  const grow = (x, y) => {
+    minX = Math.min(minX, x); minY = Math.min(minY, y);
+    maxX = Math.max(maxX, x); maxY = Math.max(maxY, y);
+  };
+  pts.forEach(p => { grow(p.x - dot, p.y - dot); grow(p.x + dot, p.y + dot); });
+  if (art) { grow(art.x, art.y); grow(art.x + art.w, art.y + art.h); }
   const pins = {};
-  pts.forEach(p => { pins[p.pin] = { left: p.x - x - dot, top: p.y - y - dot }; });
-  return { x, y, w: boxW, h: boxH, pins, flat: false };
+  pts.forEach(p => { pins[p.pin] = { left: p.x - minX - dot, top: p.y - minY - dot }; });
+  return {
+    x: minX,
+    y: minY,
+    w: Math.max(maxX - minX, BB.hole),
+    h: Math.max(maxY - minY, BB.hole),
+    pins,
+    kind,
+    art: art ? { x: art.x - minX, y: art.y - minY, w: art.w, h: art.h } : null
+  };
 }
 
 function applySeatedPositions() {
@@ -1421,7 +1742,7 @@ function holeTaken(hole, exceptId) {
 }
 
 function snapPartToBoard(c) {
-  if (!bbOn) return false;
+  if (!bbOn && !bbFullOn) return false;
   const el = $('comp-' + c.id);
   const pinEl = el && el.querySelector('.term-pin');
   if (!pinEl) return false;
@@ -1430,11 +1751,20 @@ function snapPartToBoard(c) {
   const hit = nearestGridHole(pt.x, pt.y, 22);
   if (!hit) return false;
   const pins = COMP_SPECS[c.type].pins;
+  const cols = hit.full ? BB_FULL.cols : BB.cols;
+  const pre = hit.full ? 'F' : '';
+  if (c.type === 'btn') {
+    const col = Math.max(1, Math.min(hit.col, cols - 1));
+    const holes = [pre + col + 'e', pre + (col + 1) + 'e', pre + col + 'f', pre + (col + 1) + 'f'];
+    if (holes.some(h => holeTaken(h, c.id))) return false;
+    c.seat = { PIN1: holes[0], PIN2: holes[1], PIN3: holes[2], PIN4: holes[3] };
+    return true;
+  }
   const strides = (c.type === 'res' || c.type === 'bat') ? [4, 1] : [1];
   for (const stride of strides) {
     const span = (pins.length - 1) * stride;
-    for (let start = hit.col; start + span <= BB.cols; start++) {
-      const holes = pins.map((_, i) => (start + i * stride) + hit.row);
+    for (let start = hit.col; start + span <= cols; start++) {
+      const holes = pins.map((_, i) => pre + (start + i * stride) + hit.row);
       if (holes.some(h => holeTaken(h, c.id))) continue;
       c.seat = {};
       pins.forEach((p, i) => { c.seat[p] = holes[i]; });
@@ -1449,10 +1779,16 @@ function startBbDrag(e) {
   if (drawing || dragItem) return;
   if (e.target.closest('.bb-hole, .bb-close')) return;
   if (e.button !== undefined && e.button !== 0) return;
-  const el = $('breadboard');
+  const el = e.currentTarget;
+  const full = el.id === 'breadboard-full';
   const pt = e.touches ? e.touches[0] : e;
   const rect = el.getBoundingClientRect();
-  bbDrag = { dx: (pt.clientX - rect.left) / view.z, dy: (pt.clientY - rect.top) / view.z };
+  bbDrag = {
+    el,
+    pos: full ? bbFullPos : bbPos,
+    dx: (pt.clientX - rect.left) / view.z,
+    dy: (pt.clientY - rect.top) / view.z
+  };
   el.classList.add('dragging');
   document.addEventListener('mousemove', moveBbDrag);
   document.addEventListener('mouseup', endBbDrag);
@@ -1464,16 +1800,15 @@ function moveBbDrag(e) {
   if (e.cancelable) e.preventDefault();
   const pt = e.touches ? e.touches[0] : e;
   const p = stagePoint(pt.clientX, pt.clientY);
-  const el = $('breadboard');
-  bbPos.x = Math.max(-2500, Math.min(6500, p.x - bbDrag.dx));
-  bbPos.y = Math.max(-2500, Math.min(6500, p.y - bbDrag.dy));
+  bbDrag.pos.x = Math.max(-2500, Math.min(6500, p.x - bbDrag.dx));
+  bbDrag.pos.y = Math.max(-2500, Math.min(6500, p.y - bbDrag.dy));
   applyBbPos();
   applySeatedPositions();
   renderWires();
 }
 function endBbDrag() {
+  const el = bbDrag && bbDrag.el;
   bbDrag = null;
-  const el = $('breadboard');
   if (el) el.classList.remove('dragging');
   document.removeEventListener('mousemove', moveBbDrag);
   document.removeEventListener('mouseup', endBbDrag);
@@ -1482,8 +1817,12 @@ function endBbDrag() {
   histRemember();
 }
 renderBreadboard();
-$('breadboard').addEventListener('mousedown', startBbDrag);
-$('breadboard').addEventListener('touchstart', startBbDrag, { passive: true });
+['breadboard', 'breadboard-full'].forEach(id => {
+  const el = $(id);
+  if (!el) return;
+  el.addEventListener('mousedown', startBbDrag);
+  el.addEventListener('touchstart', startBbDrag, { passive: true });
+});
 
 
 /* Loaded in order by js/sim/boot.js. Do not load this file on its own. */
@@ -1876,6 +2215,7 @@ async function startExecution() {
   if (typeof setBaudLabel === 'function') setBaudLabel(0);
 
   const rawCode = $('code-input').value;
+  sketchSnapshot = rawCode;
   const warnings = circuitWarnings(rawCode);
   const jsCode = transpileArduinoCode(rawCode);
   $('serial-out').innerText = '-- Sketch started --\n' + (warnings.length ? warnings.map(w => '[Circuit] ' + w).join('\n') + '\n' : '');
@@ -1937,31 +2277,16 @@ function stopExecution() {
   if (typeof updateVisualOutputs === 'function') updateVisualOutputs();
   const vEl = $('scope-voltage');
   if (vEl) vEl.innerText = '0.0 V';
-  const btn = $('run-btn');
-  if (btn) {
-    btn.classList.remove('is-stop', 'btn-danger');
-    btn.classList.add('btn-primary');
-    btn.title = 'Run';
-    btn.setAttribute('aria-label', 'Run');
-    const word = btn.querySelector('.run-word');
-    if (word) word.textContent = 'Run';
-  }
+  if (typeof paintRunButtons === 'function') paintRunButtons(false);
 }
 
 function toggleExecution() {
+  if (isRunning && typeof codeDirty === 'function' && codeDirty()) { restartRun(); return; }
   if (isRunning) {
     stopExecution();
   } else {
-    const btn = $('run-btn');
-    if (btn) {
-      btn.classList.add('is-stop', 'btn-danger');
-      btn.classList.remove('btn-primary');
-      btn.title = 'Stop';
-      btn.setAttribute('aria-label', 'Stop');
-      const word = btn.querySelector('.run-word');
-      if (word) word.textContent = 'Stop';
-    }
     startExecution();
+    if (typeof paintRunButtons === 'function') paintRunButtons(true);
   }
 }
 
@@ -2230,7 +2555,7 @@ class __Servo {
     wiredComps(__pinKey(this.pin)).forEach(({ comp }) => {
       if (comp.type !== 'servo') return;
       comp.state.angle = Math.round(angle);
-      const horn = $('servo-horn-' + comp.id); if (horn) horn.style.transform = `rotate(${angle}deg)`;
+      paintServoHorn(comp.id, angle);
       const l = $('servo-lbl-' + comp.id); if (l) l.textContent = Math.round(angle) + '°';
     });
   }
@@ -2376,8 +2701,15 @@ function netAdj() {
   link('a:A5', 'a:SCL');
   link('a:5V', 'a:IOREF');
   for (const c of components) {
-    if (c.type !== 'res') continue;
-    link(endpointNode({ type: 'comp', pinId: c.id + '-A' }), endpointNode({ type: 'comp', pinId: c.id + '-B' }));
+    if (c.type === 'res') {
+      link(endpointNode({ type: 'comp', pinId: c.id + '-A' }), endpointNode({ type: 'comp', pinId: c.id + '-B' }));
+    } else if (c.type === 'btn') {
+      const left = endpointNode({ type: 'comp', pinId: c.id + '-PIN1' });
+      const right = endpointNode({ type: 'comp', pinId: c.id + '-PIN2' });
+      link(left, endpointNode({ type: 'comp', pinId: c.id + '-PIN3' }));
+      link(right, endpointNode({ type: 'comp', pinId: c.id + '-PIN4' }));
+      if (c.state.pressed) link(left, right);
+    }
   }
   _adj = adj;
   return adj;
@@ -2528,6 +2860,8 @@ function updateVisualOutputs() {
         const rotor = el.querySelector(t === 'pump' ? '.pump-rotor' : '.fan-rotor') || el;
         rotor.style.animation = motorOn ? `spin ${(1.2 - 1.05 * lv).toFixed(2)}s linear infinite` : 'none';
       }
+    } else if (t === 'servo') {
+      paintServoHorn(c.id, c.state.angle);
     } else if (t === 'buz') {
       const k = ardPinOf(c.id, 'POS'), f = k && toneState[k], on = !!f || netLevel(c.id, 'POS') > 0.5;
       const el = $('buz-' + c.id), lb = $('buz-lbl-' + c.id);
@@ -2540,6 +2874,53 @@ function updateVisualOutputs() {
       c.state.segNum = digit;
       const el = $('seg-' + c.id); if (el) el.innerText = digit;
     }
+  });
+  paintWireCurrent();
+}
+
+function paintWireCurrent() {
+  const live = new Set();
+  const mark = (node) => {
+    if (!node) return;
+    connectedSet(node).forEach(id => live.add(id));
+  };
+  if (isRunning) {
+    components.forEach(c => {
+      const pin = (name) => endpointNode({ type: 'comp', pinId: c.id + '-' + name });
+      const t = c.type;
+      if (t === 'led_r' || t === 'led_y' || t === 'led_g' || t === 'led_b') {
+        const cathode = pin('CATHODE');
+        if (netLevel(c.id, 'ANODE') > 0.02 && netSunk(cathode)) {
+          mark(pin('ANODE'));
+          mark(cathode);
+        }
+      } else if (t === 'rgb') {
+        let any = false;
+        ['R', 'G', 'B'].forEach(ch => {
+          if (netLevel(c.id, ch) > 0.02) { mark(pin(ch)); any = true; }
+        });
+        if (any) mark(pin('GND'));
+      } else if (t === 'lamp' || t === 'fan' || t === 'pump' || t === 'buz') {
+        const gnd = pin('GND');
+        const powered = (t === 'buz' && ardPinOf(c.id, 'POS') && toneState[ardPinOf(c.id, 'POS')]) || (netLevel(c.id, 'POS') > 0.02 && netSunk(gnd));
+        if (powered) { mark(pin('POS')); mark(gnd); }
+      } else if (t === 'relay' && c.state.relayOn) {
+        mark(pin('IN'));
+        mark(pin('GND'));
+      } else if (t === 'servo' && isRunning) {
+        const pwm = ardPinOf(c.id, 'PWM');
+        if (pwm && pinLevel(pwm) > 0.02) { mark(pin('PWM')); mark(pin('VCC')); mark(pin('GND')); }
+      }
+    });
+    Object.keys(pinStates).forEach(k => {
+      if (pinLevel(k) > 0.08) live.add('a:' + k);
+    });
+  }
+  document.querySelectorAll('#wires-svg g.jumper').forEach(g => {
+    const w = wires.find(x => x.id === g.id);
+    if (!w) return;
+    const on = live.has(endpointNode(w.from)) || live.has(endpointNode(w.to));
+    g.classList.toggle('live', on);
   });
 }
 
@@ -2597,7 +2978,7 @@ function exportTargets() {
     const part = components.find(c => c.id === id);
     return !!(part && part.seat);
   });
-  const bread = bbOn && (!hasSel || seated);
+  const bread = (bbOn || bbFullOn) && (!hasSel || seated);
   const endOn = ref => {
     if (!ref) return false;
     if (ref.type === 'comp') return compIds.has(String(ref.pinId).split('-')[0]);
@@ -2680,8 +3061,9 @@ function hideImageMenu() {
   if (menu) menu.hidden = true;
 }
 function onCanvasContext(e) {
-  if (e.target.closest('.view-hud, .parts-plus, .parts-pop, .prop-pop, .edge-drag, .canvas-run, #board-show')) return;
+  if (e.target.closest('.view-hud, .parts-plus, .parts-pop, .prop-pop, .edge-drag, .canvas-run, #board-show, .beginner-bar')) return;
   e.preventDefault();
+  if (document.body.classList.contains('beginner')) return;
   const comp = e.target.closest('.comp-box');
   if (comp) {
     const id = comp.id.slice(5);
@@ -2695,7 +3077,9 @@ async function renderCircuitImage(withBackground) {
   const pick = exportTargets();
   let box = null;
   if (pick.board) box = uniteBox(box, stageBox($('arduino-uno')));
-  if (pick.bread) box = uniteBox(box, stageBox($('breadboard')));
+  if (pick.bread) {
+    ['breadboard', 'breadboard-full'].forEach(id => { box = uniteBox(box, stageBox($(id))); });
+  }
   pick.compIds.forEach(id => { box = uniteBox(box, stageBox($('comp-' + id))); });
   pick.wireIds.forEach(id => {
     const path = document.getElementById(id);
@@ -2746,10 +3130,14 @@ async function renderCircuitImage(withBackground) {
     layer.appendChild(board);
   }
   if (pick.bread) {
-    const bread = $('breadboard').cloneNode(true);
-    bread.classList.remove('dragging');
-    bread.querySelectorAll('.bb-close').forEach(node => node.remove());
-    layer.appendChild(bread);
+    ['breadboard', 'breadboard-full'].forEach(id => {
+      const src = $(id);
+      if (!src || src.classList.contains('off')) return;
+      const bread = src.cloneNode(true);
+      bread.classList.remove('dragging');
+      bread.querySelectorAll('.bb-close').forEach(node => node.remove());
+      layer.appendChild(bread);
+    });
   }
   pick.compIds.forEach(id => {
     const el = $('comp-' + id);
@@ -2810,7 +3198,7 @@ function saveProject() {
     arduino: arduinoPos,
     vertical: boardVertical,
     board: boardId,
-    breadboard: bbOn ? { x: bbPos.x, y: bbPos.y, on: true } : null,
+    breadboard: breadboardState(),
     view
   };
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
@@ -2835,10 +3223,7 @@ function loadProject(e) {
         if (data.arduino && typeof data.arduino.x === 'number') arduinoPos = { x: data.arduino.x, y: data.arduino.y };
         boardVertical = !!data.vertical;
         applyBoardOrient();
-        if (data.breadboard && data.breadboard.on && typeof data.breadboard.x === 'number') {
-          bbOn = true;
-          bbPos = { x: data.breadboard.x, y: data.breadboard.y };
-        } else bbOn = false;
+        applyBreadboardState(data.breadboard);
         if (data.view) restoreView(data.view);
         applyArduinoPos();
         applyBbPos();
@@ -2918,7 +3303,8 @@ function autoConnectWires() {
     return { ard, color, kind };
   }
 
-  if (!bbOn) {
+  const seat = bbSeat();
+  if (!seat) {
     components.forEach(c => {
       c.seat = null;
       const spec = COMP_SPECS[c.type];
@@ -2965,16 +3351,17 @@ function autoConnectWires() {
     spec.pins.forEach(pin => plan.push({ c, pin, ...targetFor(c, pin) }));
   });
 
+  const H = (n, tail) => seat.pre + n + tail;
   const placed = new Set();
   const jumpers = [];
   let col = 1;
   components.forEach(c => { c.seat = null; });
   const byId = id => components.find(x => x.id === id);
   function placePair(res, led) {
-    if (!res || !led || placed.has(res.id) || col + 7 > BB.cols) return false;
-    res.seat = { A: col + 'c', B: (col + 4) + 'c' };
-    led.seat = { ANODE: (col + 6) + 'c', CATHODE: (col + 7) + 'c' };
-    jumpers.push([(col + 4) + 'e', (col + 6) + 'e']);
+    if (!res || !led || placed.has(res.id) || col + 7 > seat.cols) return false;
+    res.seat = { A: H(col, 'c'), B: H(col + 4, 'c') };
+    led.seat = { ANODE: H(col + 6, 'c'), CATHODE: H(col + 7, 'c') };
+    jumpers.push([H(col + 4, 'e'), H(col + 6, 'e')]);
     placed.add(res.id);
     placed.add(led.id);
     col += 9;
@@ -2986,12 +3373,18 @@ function autoConnectWires() {
     if (!spec) return;
     if (c.type === 'res' && resToLed.has(c.id) && placePair(c, byId(resToLed.get(c.id)))) return;
     if ((c.type === 'led_r' || c.type === 'led_y' || c.type === 'led_g' || c.type === 'led_b') && ledToRes.has(c.id) && placePair(byId(ledToRes.get(c.id)), c)) return;
+    if (c.type === 'btn' && col + 1 <= seat.cols) {
+      c.seat = { PIN1: H(col, 'e'), PIN2: H(col + 1, 'e'), PIN3: H(col, 'f'), PIN4: H(col + 1, 'f') };
+      placed.add(c.id);
+      col += 3;
+      return;
+    }
     const n = spec.pins.length;
     const stride = (c.type === 'res' || c.type === 'bat') ? 4 : 1;
     const span = (n - 1) * stride;
-    if (col + span > BB.cols) return;
+    if (col + span > seat.cols) return;
     c.seat = {};
-    spec.pins.forEach((p, i) => { c.seat[p] = (col + i * stride) + 'c'; });
+    spec.pins.forEach((p, i) => { c.seat[p] = H(col + i * stride, 'c'); });
     placed.add(c.id);
     col += span + 2;
   });
@@ -3013,6 +3406,8 @@ function autoConnectWires() {
   };
   let need5 = false;
   let needG = false;
+  let right5 = false;
+  let rightG = false;
   plan.forEach(item => {
     if (!item.ard || item.kind === 'none') return;
     const hole = item.c.seat && item.c.seat[item.pin];
@@ -3022,20 +3417,26 @@ function autoConnectWires() {
     }
     const parsed = parseHole(hole);
     const landRow = parsed.row && 'fghij'.includes(parsed.row) ? 'j' : 'e';
-    const land = parsed.col + landRow;
+    const pre = parsed.full ? 'F' : '';
+    const land = pre + parsed.col + landRow;
+    const right = parsed.full && parsed.col > BB_FULL.split;
     if (item.kind === 'gnd') {
       needG = true;
-      add({ type: 'bb', pinId: 't-' + parsed.col }, { type: 'bb', pinId: land }, '#171717');
+      if (right) rightG = true;
+      add({ type: 'bb', pinId: pre + 't-' + parsed.col }, { type: 'bb', pinId: land }, '#171717');
     } else if (item.ard === '5V') {
       need5 = true;
-      add({ type: 'bb', pinId: 't+' + parsed.col }, { type: 'bb', pinId: land }, '#dc2626');
+      if (right) right5 = true;
+      add({ type: 'bb', pinId: pre + 't+' + parsed.col }, { type: 'bb', pinId: land }, '#dc2626');
     } else {
       add({ type: 'ard', pinId: item.ard }, { type: 'bb', pinId: land }, item.color);
     }
   });
   jumpers.forEach(([a, b]) => add({ type: 'bb', pinId: a }, { type: 'bb', pinId: b }, '#f97316'));
-  if (need5) add({ type: 'ard', pinId: '5V' }, { type: 'bb', pinId: 't+1' }, '#dc2626');
-  if (needG) add({ type: 'ard', pinId: 'GND' }, { type: 'bb', pinId: 't-1' }, '#171717');
+  if (need5) add({ type: 'ard', pinId: '5V' }, { type: 'bb', pinId: seat.pre + 't+1' }, '#dc2626');
+  if (needG) add({ type: 'ard', pinId: 'GND' }, { type: 'bb', pinId: seat.pre + 't-1' }, '#171717');
+  if (right5) add({ type: 'bb', pinId: 'Ft+' + BB_FULL.split }, { type: 'bb', pinId: 'Ft+' + (BB_FULL.split + 1) }, '#dc2626');
+  if (rightG) add({ type: 'bb', pinId: 'Ft-' + BB_FULL.split }, { type: 'bb', pinId: 'Ft-' + (BB_FULL.split + 1) }, '#171717');
 
   renderComponents();
   renderWires();
@@ -3053,9 +3454,9 @@ void setup() {
 
 void loop() {
   digitalWrite(ledPin, HIGH);
-  delay(500);
+  delay(1000);
   digitalWrite(ledPin, LOW);
-  delay(500);
+  delay(1000);
 }`,
     setup() {
       clearWorkspace();
@@ -3080,9 +3481,9 @@ void setup() {
 
 void loop() {
   digitalWrite(ledPin, HIGH);
-  delay(500);
+  delay(1000);
   digitalWrite(ledPin, LOW);
-  delay(500);
+  delay(1000);
 }`,
     setup() {
       clearWorkspace();
@@ -4321,6 +4722,8 @@ function loadExample(key) {
   const apply = () => {
     ex.setup();
     layoutComponentsParallel();
+    placeServoEnds();
+    renderWires();
   };
   if (typeof histBatch === 'function' && histReady) histBatch(apply);
   else apply();
@@ -4350,7 +4753,14 @@ function setCompVal(id,key,val){
   const box=$('comp-'+id); if(!box) return;
   if(key==='pressed'){
     const b=box.querySelector('button.tact');
-    if(b) b.classList.toggle('down', !!val);
+    if(b){
+      b.classList.toggle('down', !!val);
+      b.setAttribute('aria-pressed', val ? 'true' : 'false');
+    }
+    const face=box.querySelector('.btn-face');
+    if(face) face.classList.toggle('down', !!val);
+    touchAdj();
+    if(typeof updateVisualOutputs==='function') updateVisualOutputs();
     return;
   }
   if(key==='value' && c.type==='pot'){
@@ -4370,18 +4780,15 @@ function setStatus(kind,txt){
 }
 const _toggle=toggleExecution, _stop=stopExecution, _start=startExecution;
 toggleExecution=function(){
+  if(isRunning && codeDirty()){ restartRun(); return; }
   if(isRunning){ stopExecution(); return; }
-  const btn=$('run-btn'); btn.classList.add('is-stop'); btn.classList.replace('btn-primary','btn-danger');
-  btn.title='Stop'; btn.setAttribute('aria-label','Stop');
-  const stopWord=btn.querySelector('.run-word'); if(stopWord) stopWord.textContent='Stop';
-  setStatus('run','Running'); startExecution();
+  setStatus('run','Running'); startExecution(); paintRunButtons(true); syncCoach();
 };
 stopExecution=function(){
   const was=isRunning; _stop();
-  const btn=$('run-btn'); btn.classList.remove('is-stop'); if(btn.classList.contains('btn-danger')) btn.classList.replace('btn-danger','btn-primary');
-  btn.title='Run'; btn.setAttribute('aria-label','Run');
-  const runWord=btn.querySelector('.run-word'); if(runWord) runWord.textContent='Run';
+  paintRunButtons(false);
   if(!$('status-pill').classList.contains('err')) setStatus('', was?'Stopped':'Stopped');
+  syncCoach();
 };
 const _serialPrint=null;
 function restartRun(){
@@ -4395,8 +4802,71 @@ new MutationObserver(()=>{
 
 const _hpc=handlePinClick;
 handlePinClick=function(t,p){ _hpc(t,p); updateCounts(); };
+function partsBill() {
+  const rows = [{ key: 'board', name: boardId === 'esp32' ? 'ESP32 DevKit' : 'Arduino Uno', qty: 1 }];
+  const groups = new Map();
+  (Array.isArray(components) ? components : []).forEach(function (part) {
+    if (!part) return;
+    const type = String(part.type || 'part');
+    let name = PART_NAMES[type] || type;
+    if (type === 'res') name = 'Resistor ' + ((part.state && part.state.ohms) || 220) + ' ohm';
+    const key = type + '|' + name;
+    const row = groups.get(key) || { key: key, name: name, qty: 0 };
+    row.qty += 1;
+    groups.set(key, row);
+  });
+  rows.splice(1, 0, { key: 'bb', name: 'Breadboard', qty: 1 });
+  if (typeof bbFullOn !== 'undefined' && bbFullOn) rows.splice(2, 0, { key: 'bb-full', name: 'Full breadboard', qty: 1 });
+  groups.forEach(function (row) { rows.push(row); });
+  if (Array.isArray(wires) && wires.length) rows.push({ key: 'wires', name: 'Jumper wires', qty: wires.length });
+  return rows;
+}
+function partsBillText() {
+  const title = ($('current-project') && $('current-project').textContent) || 'Project';
+  return [title].concat(partsBill().map(function (row) { return row.qty + '  ' + row.name; })).join('\n');
+}
+function renderPartsList() {
+  const list = $('bill-list');
+  if (!list) return;
+  list.textContent = '';
+  partsBill().forEach(function (row) {
+    const item = document.createElement('li');
+    item.textContent = row.qty + ' × ' + row.name;
+    list.appendChild(item);
+  });
+}
+function copyViaTextarea(text) {
+  const area = document.createElement('textarea');
+  area.value = text;
+  area.setAttribute('readonly', '');
+  area.style.position = 'fixed';
+  area.style.top = '0';
+  area.style.left = '0';
+  document.body.appendChild(area);
+  area.focus();
+  area.select();
+  area.setSelectionRange(0, area.value.length);
+  let ok = false;
+  try { ok = document.execCommand('copy'); } catch (e) { ok = false; }
+  area.remove();
+  return ok;
+}
+function copyPartsList() {
+  const text = partsBillText();
+  const note = $('parts-copied');
+  const show = function (ok) {
+    if (!note) return;
+    note.hidden = false;
+    note.textContent = ok ? 'Copied' : 'Select the list and copy it';
+    setTimeout(function () { note.hidden = true; }, 1600);
+  };
+  const fallback = function () { show(copyViaTextarea(text)); };
+  if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(text).then(function () { show(true); }).catch(fallback);
+  else fallback();
+}
 function updateCounts(){
   $('sb-wires').innerText='Wires: '+wires.length; $('sb-comps').innerText='Components: '+components.length;
+  renderPartsList();
 }
 ['renderWires','renderComponents'].forEach(n=>{const o=window[n]; window[n]=function(){const r=o.apply(this,arguments); updateCounts(); return r;};});
 
@@ -4415,6 +4885,7 @@ function newProject() {
     stopExecution();
     clearWorkspace();
     bbOn = false;
+    bbFullOn = false;
     applyBbPos();
     setBoardOpen(true);
     $('code-input').value = 'void setup() {\n  \n}\n\nvoid loop() {\n  \n}\n';
@@ -4462,7 +4933,7 @@ function docSnap() {
     vertical: boardVertical,
     board: boardId,
     boardOpen: !(board && board.classList.contains('is-closed')),
-    breadboard: bbOn ? { x: bbPos.x, y: bbPos.y, on: true } : null
+    breadboard: breadboardState()
   });
 }
 function histButtons() {
@@ -4499,10 +4970,7 @@ function histRestore(snap) {
     if (d.arduino && typeof d.arduino.x === 'number') arduinoPos = { x: d.arduino.x, y: d.arduino.y };
     boardVertical = !!d.vertical;
     if (d.board && d.board !== boardId) setBoard(d.board);
-    if (d.breadboard && d.breadboard.on && typeof d.breadboard.x === 'number') {
-      bbOn = true;
-      bbPos = { x: d.breadboard.x, y: d.breadboard.y };
-    } else bbOn = false;
+    applyBreadboardState(d.breadboard);
     applyArduinoPos();
     applyBoardOrient();
     applyBbPos();
@@ -4579,19 +5047,24 @@ window.addEventListener('keydown',e=>{
   }
 });
 // close file menu when clicking elsewhere
-document.addEventListener('click',e=>{const m=document.querySelector('details.menu'); if(m&&!m.contains(e.target)) m.open=false; else if(m&&e.target.closest('.menu-list button')) m.open=false; const img=$('img-menu'); if(img&&!img.contains(e.target)) img.hidden=true;});
+document.addEventListener('click',e=>{
+  document.querySelectorAll('details.menu').forEach(m=>{ if(!m.contains(e.target)) m.open=false; });
+  const owner=e.target.closest&&e.target.closest('.menu-list button');
+  if(owner){ const menu=owner.closest('details.menu'); if(menu) menu.open=false; }
+  const img=$('img-menu'); if(img&&!img.contains(e.target)) img.hidden=true;
+});
 document.addEventListener('keydown',e=>{ if(e.key==='Escape') hideImageMenu(); });
 window.addEventListener('resize',renderWires);
 
 // run timer + code line info
 setInterval(()=>{ $('sb-time').innerText='Run time: '+(isRunning?Math.floor((Date.now()-executionStartTime)/1000):0)+'s'; },500);
-$('code-input').addEventListener('input',()=>{ $('code-info').innerText=$('code-input').value.split('\n').length+' lines'; scheduleCodeHist(); });
+$('code-input').addEventListener('input',()=>{ $('code-info').innerText=$('code-input').value.split('\n').length+' lines'; scheduleCodeHist(); paintRunButtons(isRunning); syncCoach(); });
 
 // auto-save / restore (localStorage, guarded)
 const SAVE_KEY='arduino_sim_v4'; let lastSaved='';
 setInterval(()=>{
   try{
-    const snap=JSON.stringify({code:$('code-input').value,components,wires,arduino:arduinoPos,vertical:boardVertical,board:boardId,breadboard:bbOn?{x:bbPos.x,y:bbPos.y,on:true}:null,view});
+    const snap=JSON.stringify({code:$('code-input').value,components,wires,arduino:arduinoPos,vertical:boardVertical,board:boardId,breadboard:breadboardState(),view});
     if(snap!==lastSaved){localStorage.setItem(SAVE_KEY,snap);lastSaved=snap;$('sb-save').innerText='Auto-save ✔ '+new Date().toLocaleTimeString();}
   }catch(e){$('sb-save').innerText='Auto-save off';}
 },2000);
@@ -4653,11 +5126,13 @@ function initLabChrome() {
     pop.hidden = !pop.hidden;
     if (!pop.hidden) $('parts-search').focus();
   });
+  const partsCopy = $('parts-copy');
+  if (partsCopy) partsCopy.addEventListener('click', copyPartsList);
   const exampleSearch = $('example-search');
   if (exampleSearch) exampleSearch.addEventListener('input', filterExamples);
   const coachHide = $('first-run-dismiss');
   if (coachHide) coachHide.addEventListener('click', () => {
-    try { sessionStorage.setItem('lab-coach', '1'); } catch (e) {}
+    try { localStorage.setItem('lab-change-prompt', '1'); } catch (e) {}
     $('first-run').hidden = true;
   });
   $('parts-search').addEventListener('input', () => {
@@ -4706,8 +5181,7 @@ window.onload=function(){
       $('code-input').value=d.code; components=d.components||[]; wires=d.wires||[];
       if(d.arduino && typeof d.arduino.x==='number') arduinoPos={x:d.arduino.x,y:d.arduino.y};
       if(d.vertical) boardVertical=true;
-      if(d.breadboard && d.breadboard.on && typeof d.breadboard.x==='number'){ bbOn=true; bbPos={x:d.breadboard.x,y:d.breadboard.y}; }
-      else bbOn=false;
+      applyBreadboardState(d.breadboard);
       if(d.view) restoreView(d.view);
       nextCompId=components.reduce((m,c)=>Math.max(m,parseInt(String(c.id).slice(1))||0),0)+1;
       applyArduinoPos();
@@ -4736,7 +5210,7 @@ window.onload=function(){
     }catch(e){}
   } else if(!restored) loadExample(savedBoard==='esp32' ? 'esp32_blink' : 'blink');
   if($('code-input') && !String($('code-input').value||'').trim()) loadExample(savedBoard==='esp32' ? 'esp32_blink' : 'blink');
-  $('code-input').dispatchEvent(new Event('input')); updateCounts();
+  $('code-input').dispatchEvent(new Event('input')); updateCounts(); renderPartsList();
   setTimeout(renderWires,300);
   initLabChrome();
   if (exampleKey && EXAMPLES[exampleKey]) setBoardOpen(true);
@@ -4744,12 +5218,32 @@ window.onload=function(){
   const gridBox = $('grid-toggle');
   if (gridBox) gridBox.checked = gridVisible;
   try { applyCanvasBg(parseInt(localStorage.getItem('arduino_canvas_bg') || '0', 10) || 0); } catch (e) { applyCanvasBg(0); }
+  const bootCode = $('code-input');
+  if (bootCode && /LED blink/.test(bootCode.value) && /delay\(500\)/.test(bootCode.value) && /ledPin/.test(bootCode.value) && !/Serial\.begin/.test(bootCode.value)) {
+    bootCode.value = bootCode.value.replace(/delay\(500\)/g, 'delay(1000)');
+  }
+  if (bootCode && $('example-select') && !$('example-select').value) {
+    if (/Example 1: LED blink/.test(bootCode.value)) $('example-select').value = 'blink';
+    else if (/ESP32 onboard LED blink/.test(bootCode.value)) $('example-select').value = 'esp32_blink';
+    if ($('example-select').value) showProjectName();
+  }
   histReset();
   syncCoach();
+  if (shouldBootRun()) toggleExecution();
+  const bootKey = ($('example-select') && $('example-select').value) || '';
+  const bootSketch = ($('code-input') && $('code-input').value) || '';
+  if ((!bootKey || bootKey === 'blink' || bootKey === 'esp32_blink') && /delay\(\s*1000\s*\)/.test(bootSketch) && !window.matchMedia('(max-width: 1024px)').matches) focusDelayToken();
 };
 // keep example dropdown in sync when loading one
 const _le=loadExample;
-loadExample=function(k){ histBatch(() => { stopExecution(); if(k==='esp32_blink'){ if(boardId!=='esp32') setBoard('esp32'); } else if(k && boardId!=='uno') setBoard('uno'); if(k) setBoardOpen(true); _le(k); if(k) $('example-select').value=k; $('code-input').dispatchEvent(new Event('input')); if(k){ try{ const url=new URL(location.href); url.searchParams.set('example', k); url.searchParams.set('board', k==='esp32_blink'?'esp32':'uno'); history.replaceState(null,'',url.pathname+url.search); }catch(e){} } }); syncCoach(); };
+function showProjectName(){
+  const el=$('current-project');
+  const sel=$('example-select');
+  if(!el||!sel) return;
+  const text=sel.selectedOptions[0]?sel.selectedOptions[0].textContent:'LED Blink';
+  el.textContent=String(text).replace(/^\d+\.\s*/,'');
+}
+loadExample=function(k){ histBatch(() => { stopExecution(); if(k==='esp32_blink'){ if(boardId!=='esp32') setBoard('esp32'); } else if(k && boardId!=='uno') setBoard('uno'); if(k) setBoardOpen(true); _le(k); if(k) $('example-select').value=k; $('code-input').dispatchEvent(new Event('input')); if(k){ try{ const url=new URL(location.href); url.searchParams.set('example', k); url.searchParams.set('board', k==='esp32_blink'?'esp32':'uno'); history.replaceState(null,'',url.pathname+url.search); }catch(e){} } }); const menu=$('projects-menu'); if(menu&&k) menu.open=false; showProjectName(); syncCoach(); };
 function showLessonReturn(){
   const el=$('back-lesson');
   if(!el) return;
@@ -4777,15 +5271,89 @@ function filterExamples(){
     group.disabled=!any;
   });
 }
+function applyMode(advanced){
+  document.body.classList.toggle('beginner', !advanced);
+  document.body.classList.toggle('advanced', !!advanced);
+  const btn=$('advanced-toggle');
+  if(btn){
+    btn.setAttribute('aria-pressed', advanced ? 'true' : 'false');
+    btn.textContent=advanced ? 'Beginner' : 'Advanced';
+  }
+}
+function loadUiMode(){
+  let advanced=false;
+  try{ advanced=localStorage.getItem('lab-ui-mode')==='advanced'; }catch(e){}
+  applyMode(advanced);
+}
+function toggleAdvanced(){
+  const next=!document.body.classList.contains('advanced');
+  applyMode(next);
+  try{ localStorage.setItem('lab-ui-mode', next ? 'advanced' : 'beginner'); }catch(e){}
+  renderWires();
+}
+function focusDelayToken(){
+  const area=$('code-input');
+  if(!area) return;
+  area.focus();
+  const match=area.value.match(/delay\(\s*1000\s*\)/);
+  if(!match) return;
+  const start=match.index+match[0].indexOf('1000');
+  area.setSelectionRange(start, start+4);
+}
+function focusCode(){
+  const narrow=window.matchMedia('(max-width: 1024px)').matches;
+  const main=document.querySelector('main');
+  const btn=$('bar-code');
+  if(narrow && main && main.dataset.tab==='code'){
+    setTab('circuit');
+    if(btn) btn.textContent='Code';
+    return;
+  }
+  if(narrow){
+    setTab('code');
+    if(btn) btn.textContent='Circuit';
+  }
+  focusDelayToken();
+}
+function shouldBootRun(){
+  const params=new URLSearchParams(location.search);
+  const asked=params.get('example');
+  if(asked && typeof EXAMPLES!=='undefined' && EXAMPLES[asked]) return true;
+  const code=($('code-input')&&$('code-input').value)||'';
+  const key=($('example-select')&&$('example-select').value)||'';
+  const blink=!key || key==='blink' || key==='esp32_blink';
+  return blink && /delay\(\s*1000\s*\)/.test(code) && /ledPin/.test(code) && !/Serial\.begin/.test(code);
+}
 function syncCoach(){
   const el=$('first-run');
-  if(!el) return;
-  const example=($('example-select')&&$('example-select').value)||'';
-  let hide=false;
-  try{ hide=sessionStorage.getItem('lab-coach')==='1'; }catch(e){}
-  const empty=!example && (!components || !components.length);
-  el.hidden=hide || !empty;
+  const text=$('coach-text');
+  if(!el||!text) return;
+  let dismissed=false;
+  try{ dismissed=localStorage.getItem('lab-change-prompt')==='1'; }catch(e){}
+  if(dismissed){ el.hidden=true; return; }
+  const key=($('example-select')&&$('example-select').value)||'';
+  if(key && key!=='blink' && key!=='esp32_blink'){ el.hidden=true; return; }
+  const code=($('code-input')&&$('code-input').value)||'';
+  const has1000=/delay\(\s*1000\s*\)/.test(code);
+  const has200=/delay\(\s*200\s*\)/.test(code);
+  if(has1000){
+    el.hidden=false;
+    text.innerHTML='<b>Change 1000 to 200.</b> Then press Run and watch the LED.';
+    return;
+  }
+  if(has200 && isRunning && !codeDirty()){
+    el.hidden=false;
+    text.innerHTML='<b>Faster.</b> The LED is using the new delay.';
+    return;
+  }
+  if(has200){
+    el.hidden=false;
+    text.innerHTML='<b>200 is in the sketch.</b> Press Run and watch the LED.';
+    return;
+  }
+  el.hidden=true;
 }
+loadUiMode();
 function stepExample(dir){
   const sel=$('example-select');
   const opts=Array.prototype.filter.call(sel.options, function(opt){ return opt.value && !opt.disabled; });
@@ -4927,7 +5495,7 @@ void loop() {
 };
 
 EXAMPLES.servo = {
-  code: `// Example 24: Control the servo angle with a potentiometer
+  code: `// Example 24: The servo horn sweeps. The potentiometer sets how far it turns.
 #include <Servo.h>
 
 Servo myServo;
@@ -4939,12 +5507,15 @@ void setup() {
 }
 
 void loop() {
-  int val = analogRead(potPin);
-  int angle = map(val, 0, 1023, 0, 180);
-  myServo.write(angle);
-  Serial.print("Angle: ");
-  Serial.println(angle);
-  delay(50);
+  int span = map(analogRead(potPin), 0, 1023, 40, 180);
+  for (int pos = 0; pos <= span; pos += 3) {
+    myServo.write(pos);
+    delay(15);
+  }
+  for (int pos = span; pos >= 0; pos -= 3) {
+    myServo.write(pos);
+    delay(15);
+  }
 }`,
   setup() {
     clearWorkspace();

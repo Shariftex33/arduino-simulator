@@ -51,8 +51,15 @@ function netAdj() {
   link('a:A5', 'a:SCL');
   link('a:5V', 'a:IOREF');
   for (const c of components) {
-    if (c.type !== 'res') continue;
-    link(endpointNode({ type: 'comp', pinId: c.id + '-A' }), endpointNode({ type: 'comp', pinId: c.id + '-B' }));
+    if (c.type === 'res') {
+      link(endpointNode({ type: 'comp', pinId: c.id + '-A' }), endpointNode({ type: 'comp', pinId: c.id + '-B' }));
+    } else if (c.type === 'btn') {
+      const left = endpointNode({ type: 'comp', pinId: c.id + '-PIN1' });
+      const right = endpointNode({ type: 'comp', pinId: c.id + '-PIN2' });
+      link(left, endpointNode({ type: 'comp', pinId: c.id + '-PIN3' }));
+      link(right, endpointNode({ type: 'comp', pinId: c.id + '-PIN4' }));
+      if (c.state.pressed) link(left, right);
+    }
   }
   _adj = adj;
   return adj;
@@ -203,6 +210,8 @@ function updateVisualOutputs() {
         const rotor = el.querySelector(t === 'pump' ? '.pump-rotor' : '.fan-rotor') || el;
         rotor.style.animation = motorOn ? `spin ${(1.2 - 1.05 * lv).toFixed(2)}s linear infinite` : 'none';
       }
+    } else if (t === 'servo') {
+      paintServoHorn(c.id, c.state.angle);
     } else if (t === 'buz') {
       const k = ardPinOf(c.id, 'POS'), f = k && toneState[k], on = !!f || netLevel(c.id, 'POS') > 0.5;
       const el = $('buz-' + c.id), lb = $('buz-lbl-' + c.id);
@@ -215,6 +224,53 @@ function updateVisualOutputs() {
       c.state.segNum = digit;
       const el = $('seg-' + c.id); if (el) el.innerText = digit;
     }
+  });
+  paintWireCurrent();
+}
+
+function paintWireCurrent() {
+  const live = new Set();
+  const mark = (node) => {
+    if (!node) return;
+    connectedSet(node).forEach(id => live.add(id));
+  };
+  if (isRunning) {
+    components.forEach(c => {
+      const pin = (name) => endpointNode({ type: 'comp', pinId: c.id + '-' + name });
+      const t = c.type;
+      if (t === 'led_r' || t === 'led_y' || t === 'led_g' || t === 'led_b') {
+        const cathode = pin('CATHODE');
+        if (netLevel(c.id, 'ANODE') > 0.02 && netSunk(cathode)) {
+          mark(pin('ANODE'));
+          mark(cathode);
+        }
+      } else if (t === 'rgb') {
+        let any = false;
+        ['R', 'G', 'B'].forEach(ch => {
+          if (netLevel(c.id, ch) > 0.02) { mark(pin(ch)); any = true; }
+        });
+        if (any) mark(pin('GND'));
+      } else if (t === 'lamp' || t === 'fan' || t === 'pump' || t === 'buz') {
+        const gnd = pin('GND');
+        const powered = (t === 'buz' && ardPinOf(c.id, 'POS') && toneState[ardPinOf(c.id, 'POS')]) || (netLevel(c.id, 'POS') > 0.02 && netSunk(gnd));
+        if (powered) { mark(pin('POS')); mark(gnd); }
+      } else if (t === 'relay' && c.state.relayOn) {
+        mark(pin('IN'));
+        mark(pin('GND'));
+      } else if (t === 'servo' && isRunning) {
+        const pwm = ardPinOf(c.id, 'PWM');
+        if (pwm && pinLevel(pwm) > 0.02) { mark(pin('PWM')); mark(pin('VCC')); mark(pin('GND')); }
+      }
+    });
+    Object.keys(pinStates).forEach(k => {
+      if (pinLevel(k) > 0.08) live.add('a:' + k);
+    });
+  }
+  document.querySelectorAll('#wires-svg g.jumper').forEach(g => {
+    const w = wires.find(x => x.id === g.id);
+    if (!w) return;
+    const on = live.has(endpointNode(w.from)) || live.has(endpointNode(w.to));
+    g.classList.toggle('live', on);
   });
 }
 
@@ -272,7 +328,7 @@ function exportTargets() {
     const part = components.find(c => c.id === id);
     return !!(part && part.seat);
   });
-  const bread = bbOn && (!hasSel || seated);
+  const bread = (bbOn || bbFullOn) && (!hasSel || seated);
   const endOn = ref => {
     if (!ref) return false;
     if (ref.type === 'comp') return compIds.has(String(ref.pinId).split('-')[0]);
@@ -355,8 +411,9 @@ function hideImageMenu() {
   if (menu) menu.hidden = true;
 }
 function onCanvasContext(e) {
-  if (e.target.closest('.view-hud, .parts-plus, .parts-pop, .prop-pop, .edge-drag, .canvas-run, #board-show')) return;
+  if (e.target.closest('.view-hud, .parts-plus, .parts-pop, .prop-pop, .edge-drag, .canvas-run, #board-show, .beginner-bar')) return;
   e.preventDefault();
+  if (document.body.classList.contains('beginner')) return;
   const comp = e.target.closest('.comp-box');
   if (comp) {
     const id = comp.id.slice(5);
@@ -370,7 +427,9 @@ async function renderCircuitImage(withBackground) {
   const pick = exportTargets();
   let box = null;
   if (pick.board) box = uniteBox(box, stageBox($('arduino-uno')));
-  if (pick.bread) box = uniteBox(box, stageBox($('breadboard')));
+  if (pick.bread) {
+    ['breadboard', 'breadboard-full'].forEach(id => { box = uniteBox(box, stageBox($(id))); });
+  }
   pick.compIds.forEach(id => { box = uniteBox(box, stageBox($('comp-' + id))); });
   pick.wireIds.forEach(id => {
     const path = document.getElementById(id);
@@ -421,10 +480,14 @@ async function renderCircuitImage(withBackground) {
     layer.appendChild(board);
   }
   if (pick.bread) {
-    const bread = $('breadboard').cloneNode(true);
-    bread.classList.remove('dragging');
-    bread.querySelectorAll('.bb-close').forEach(node => node.remove());
-    layer.appendChild(bread);
+    ['breadboard', 'breadboard-full'].forEach(id => {
+      const src = $(id);
+      if (!src || src.classList.contains('off')) return;
+      const bread = src.cloneNode(true);
+      bread.classList.remove('dragging');
+      bread.querySelectorAll('.bb-close').forEach(node => node.remove());
+      layer.appendChild(bread);
+    });
   }
   pick.compIds.forEach(id => {
     const el = $('comp-' + id);
@@ -485,7 +548,7 @@ function saveProject() {
     arduino: arduinoPos,
     vertical: boardVertical,
     board: boardId,
-    breadboard: bbOn ? { x: bbPos.x, y: bbPos.y, on: true } : null,
+    breadboard: breadboardState(),
     view
   };
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
@@ -510,10 +573,7 @@ function loadProject(e) {
         if (data.arduino && typeof data.arduino.x === 'number') arduinoPos = { x: data.arduino.x, y: data.arduino.y };
         boardVertical = !!data.vertical;
         applyBoardOrient();
-        if (data.breadboard && data.breadboard.on && typeof data.breadboard.x === 'number') {
-          bbOn = true;
-          bbPos = { x: data.breadboard.x, y: data.breadboard.y };
-        } else bbOn = false;
+        applyBreadboardState(data.breadboard);
         if (data.view) restoreView(data.view);
         applyArduinoPos();
         applyBbPos();
@@ -593,7 +653,8 @@ function autoConnectWires() {
     return { ard, color, kind };
   }
 
-  if (!bbOn) {
+  const seat = bbSeat();
+  if (!seat) {
     components.forEach(c => {
       c.seat = null;
       const spec = COMP_SPECS[c.type];
@@ -640,16 +701,17 @@ function autoConnectWires() {
     spec.pins.forEach(pin => plan.push({ c, pin, ...targetFor(c, pin) }));
   });
 
+  const H = (n, tail) => seat.pre + n + tail;
   const placed = new Set();
   const jumpers = [];
   let col = 1;
   components.forEach(c => { c.seat = null; });
   const byId = id => components.find(x => x.id === id);
   function placePair(res, led) {
-    if (!res || !led || placed.has(res.id) || col + 7 > BB.cols) return false;
-    res.seat = { A: col + 'c', B: (col + 4) + 'c' };
-    led.seat = { ANODE: (col + 6) + 'c', CATHODE: (col + 7) + 'c' };
-    jumpers.push([(col + 4) + 'e', (col + 6) + 'e']);
+    if (!res || !led || placed.has(res.id) || col + 7 > seat.cols) return false;
+    res.seat = { A: H(col, 'c'), B: H(col + 4, 'c') };
+    led.seat = { ANODE: H(col + 6, 'c'), CATHODE: H(col + 7, 'c') };
+    jumpers.push([H(col + 4, 'e'), H(col + 6, 'e')]);
     placed.add(res.id);
     placed.add(led.id);
     col += 9;
@@ -661,12 +723,18 @@ function autoConnectWires() {
     if (!spec) return;
     if (c.type === 'res' && resToLed.has(c.id) && placePair(c, byId(resToLed.get(c.id)))) return;
     if ((c.type === 'led_r' || c.type === 'led_y' || c.type === 'led_g' || c.type === 'led_b') && ledToRes.has(c.id) && placePair(byId(ledToRes.get(c.id)), c)) return;
+    if (c.type === 'btn' && col + 1 <= seat.cols) {
+      c.seat = { PIN1: H(col, 'e'), PIN2: H(col + 1, 'e'), PIN3: H(col, 'f'), PIN4: H(col + 1, 'f') };
+      placed.add(c.id);
+      col += 3;
+      return;
+    }
     const n = spec.pins.length;
     const stride = (c.type === 'res' || c.type === 'bat') ? 4 : 1;
     const span = (n - 1) * stride;
-    if (col + span > BB.cols) return;
+    if (col + span > seat.cols) return;
     c.seat = {};
-    spec.pins.forEach((p, i) => { c.seat[p] = (col + i * stride) + 'c'; });
+    spec.pins.forEach((p, i) => { c.seat[p] = H(col + i * stride, 'c'); });
     placed.add(c.id);
     col += span + 2;
   });
@@ -688,6 +756,8 @@ function autoConnectWires() {
   };
   let need5 = false;
   let needG = false;
+  let right5 = false;
+  let rightG = false;
   plan.forEach(item => {
     if (!item.ard || item.kind === 'none') return;
     const hole = item.c.seat && item.c.seat[item.pin];
@@ -697,20 +767,26 @@ function autoConnectWires() {
     }
     const parsed = parseHole(hole);
     const landRow = parsed.row && 'fghij'.includes(parsed.row) ? 'j' : 'e';
-    const land = parsed.col + landRow;
+    const pre = parsed.full ? 'F' : '';
+    const land = pre + parsed.col + landRow;
+    const right = parsed.full && parsed.col > BB_FULL.split;
     if (item.kind === 'gnd') {
       needG = true;
-      add({ type: 'bb', pinId: 't-' + parsed.col }, { type: 'bb', pinId: land }, '#171717');
+      if (right) rightG = true;
+      add({ type: 'bb', pinId: pre + 't-' + parsed.col }, { type: 'bb', pinId: land }, '#171717');
     } else if (item.ard === '5V') {
       need5 = true;
-      add({ type: 'bb', pinId: 't+' + parsed.col }, { type: 'bb', pinId: land }, '#dc2626');
+      if (right) right5 = true;
+      add({ type: 'bb', pinId: pre + 't+' + parsed.col }, { type: 'bb', pinId: land }, '#dc2626');
     } else {
       add({ type: 'ard', pinId: item.ard }, { type: 'bb', pinId: land }, item.color);
     }
   });
   jumpers.forEach(([a, b]) => add({ type: 'bb', pinId: a }, { type: 'bb', pinId: b }, '#f97316'));
-  if (need5) add({ type: 'ard', pinId: '5V' }, { type: 'bb', pinId: 't+1' }, '#dc2626');
-  if (needG) add({ type: 'ard', pinId: 'GND' }, { type: 'bb', pinId: 't-1' }, '#171717');
+  if (need5) add({ type: 'ard', pinId: '5V' }, { type: 'bb', pinId: seat.pre + 't+1' }, '#dc2626');
+  if (needG) add({ type: 'ard', pinId: 'GND' }, { type: 'bb', pinId: seat.pre + 't-1' }, '#171717');
+  if (right5) add({ type: 'bb', pinId: 'Ft+' + BB_FULL.split }, { type: 'bb', pinId: 'Ft+' + (BB_FULL.split + 1) }, '#dc2626');
+  if (rightG) add({ type: 'bb', pinId: 'Ft-' + BB_FULL.split }, { type: 'bb', pinId: 'Ft-' + (BB_FULL.split + 1) }, '#171717');
 
   renderComponents();
   renderWires();
@@ -728,9 +804,9 @@ void setup() {
 
 void loop() {
   digitalWrite(ledPin, HIGH);
-  delay(500);
+  delay(1000);
   digitalWrite(ledPin, LOW);
-  delay(500);
+  delay(1000);
 }`,
     setup() {
       clearWorkspace();
@@ -755,9 +831,9 @@ void setup() {
 
 void loop() {
   digitalWrite(ledPin, HIGH);
-  delay(500);
+  delay(1000);
   digitalWrite(ledPin, LOW);
-  delay(500);
+  delay(1000);
 }`,
     setup() {
       clearWorkspace();
@@ -1996,6 +2072,8 @@ function loadExample(key) {
   const apply = () => {
     ex.setup();
     layoutComponentsParallel();
+    placeServoEnds();
+    renderWires();
   };
   if (typeof histBatch === 'function' && histReady) histBatch(apply);
   else apply();

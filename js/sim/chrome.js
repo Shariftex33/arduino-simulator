@@ -16,7 +16,14 @@ function setCompVal(id,key,val){
   const box=$('comp-'+id); if(!box) return;
   if(key==='pressed'){
     const b=box.querySelector('button.tact');
-    if(b) b.classList.toggle('down', !!val);
+    if(b){
+      b.classList.toggle('down', !!val);
+      b.setAttribute('aria-pressed', val ? 'true' : 'false');
+    }
+    const face=box.querySelector('.btn-face');
+    if(face) face.classList.toggle('down', !!val);
+    touchAdj();
+    if(typeof updateVisualOutputs==='function') updateVisualOutputs();
     return;
   }
   if(key==='value' && c.type==='pot'){
@@ -36,18 +43,15 @@ function setStatus(kind,txt){
 }
 const _toggle=toggleExecution, _stop=stopExecution, _start=startExecution;
 toggleExecution=function(){
+  if(isRunning && codeDirty()){ restartRun(); return; }
   if(isRunning){ stopExecution(); return; }
-  const btn=$('run-btn'); btn.classList.add('is-stop'); btn.classList.replace('btn-primary','btn-danger');
-  btn.title='Stop'; btn.setAttribute('aria-label','Stop');
-  const stopWord=btn.querySelector('.run-word'); if(stopWord) stopWord.textContent='Stop';
-  setStatus('run','Running'); startExecution();
+  setStatus('run','Running'); startExecution(); paintRunButtons(true); syncCoach();
 };
 stopExecution=function(){
   const was=isRunning; _stop();
-  const btn=$('run-btn'); btn.classList.remove('is-stop'); if(btn.classList.contains('btn-danger')) btn.classList.replace('btn-danger','btn-primary');
-  btn.title='Run'; btn.setAttribute('aria-label','Run');
-  const runWord=btn.querySelector('.run-word'); if(runWord) runWord.textContent='Run';
+  paintRunButtons(false);
   if(!$('status-pill').classList.contains('err')) setStatus('', was?'Stopped':'Stopped');
+  syncCoach();
 };
 const _serialPrint=null;
 function restartRun(){
@@ -61,8 +65,71 @@ new MutationObserver(()=>{
 
 const _hpc=handlePinClick;
 handlePinClick=function(t,p){ _hpc(t,p); updateCounts(); };
+function partsBill() {
+  const rows = [{ key: 'board', name: boardId === 'esp32' ? 'ESP32 DevKit' : 'Arduino Uno', qty: 1 }];
+  const groups = new Map();
+  (Array.isArray(components) ? components : []).forEach(function (part) {
+    if (!part) return;
+    const type = String(part.type || 'part');
+    let name = PART_NAMES[type] || type;
+    if (type === 'res') name = 'Resistor ' + ((part.state && part.state.ohms) || 220) + ' ohm';
+    const key = type + '|' + name;
+    const row = groups.get(key) || { key: key, name: name, qty: 0 };
+    row.qty += 1;
+    groups.set(key, row);
+  });
+  rows.splice(1, 0, { key: 'bb', name: 'Breadboard', qty: 1 });
+  if (typeof bbFullOn !== 'undefined' && bbFullOn) rows.splice(2, 0, { key: 'bb-full', name: 'Full breadboard', qty: 1 });
+  groups.forEach(function (row) { rows.push(row); });
+  if (Array.isArray(wires) && wires.length) rows.push({ key: 'wires', name: 'Jumper wires', qty: wires.length });
+  return rows;
+}
+function partsBillText() {
+  const title = ($('current-project') && $('current-project').textContent) || 'Project';
+  return [title].concat(partsBill().map(function (row) { return row.qty + '  ' + row.name; })).join('\n');
+}
+function renderPartsList() {
+  const list = $('bill-list');
+  if (!list) return;
+  list.textContent = '';
+  partsBill().forEach(function (row) {
+    const item = document.createElement('li');
+    item.textContent = row.qty + ' × ' + row.name;
+    list.appendChild(item);
+  });
+}
+function copyViaTextarea(text) {
+  const area = document.createElement('textarea');
+  area.value = text;
+  area.setAttribute('readonly', '');
+  area.style.position = 'fixed';
+  area.style.top = '0';
+  area.style.left = '0';
+  document.body.appendChild(area);
+  area.focus();
+  area.select();
+  area.setSelectionRange(0, area.value.length);
+  let ok = false;
+  try { ok = document.execCommand('copy'); } catch (e) { ok = false; }
+  area.remove();
+  return ok;
+}
+function copyPartsList() {
+  const text = partsBillText();
+  const note = $('parts-copied');
+  const show = function (ok) {
+    if (!note) return;
+    note.hidden = false;
+    note.textContent = ok ? 'Copied' : 'Select the list and copy it';
+    setTimeout(function () { note.hidden = true; }, 1600);
+  };
+  const fallback = function () { show(copyViaTextarea(text)); };
+  if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(text).then(function () { show(true); }).catch(fallback);
+  else fallback();
+}
 function updateCounts(){
   $('sb-wires').innerText='Wires: '+wires.length; $('sb-comps').innerText='Components: '+components.length;
+  renderPartsList();
 }
 ['renderWires','renderComponents'].forEach(n=>{const o=window[n]; window[n]=function(){const r=o.apply(this,arguments); updateCounts(); return r;};});
 
@@ -81,6 +148,7 @@ function newProject() {
     stopExecution();
     clearWorkspace();
     bbOn = false;
+    bbFullOn = false;
     applyBbPos();
     setBoardOpen(true);
     $('code-input').value = 'void setup() {\n  \n}\n\nvoid loop() {\n  \n}\n';
@@ -128,7 +196,7 @@ function docSnap() {
     vertical: boardVertical,
     board: boardId,
     boardOpen: !(board && board.classList.contains('is-closed')),
-    breadboard: bbOn ? { x: bbPos.x, y: bbPos.y, on: true } : null
+    breadboard: breadboardState()
   });
 }
 function histButtons() {
@@ -165,10 +233,7 @@ function histRestore(snap) {
     if (d.arduino && typeof d.arduino.x === 'number') arduinoPos = { x: d.arduino.x, y: d.arduino.y };
     boardVertical = !!d.vertical;
     if (d.board && d.board !== boardId) setBoard(d.board);
-    if (d.breadboard && d.breadboard.on && typeof d.breadboard.x === 'number') {
-      bbOn = true;
-      bbPos = { x: d.breadboard.x, y: d.breadboard.y };
-    } else bbOn = false;
+    applyBreadboardState(d.breadboard);
     applyArduinoPos();
     applyBoardOrient();
     applyBbPos();
@@ -245,19 +310,24 @@ window.addEventListener('keydown',e=>{
   }
 });
 // close file menu when clicking elsewhere
-document.addEventListener('click',e=>{const m=document.querySelector('details.menu'); if(m&&!m.contains(e.target)) m.open=false; else if(m&&e.target.closest('.menu-list button')) m.open=false; const img=$('img-menu'); if(img&&!img.contains(e.target)) img.hidden=true;});
+document.addEventListener('click',e=>{
+  document.querySelectorAll('details.menu').forEach(m=>{ if(!m.contains(e.target)) m.open=false; });
+  const owner=e.target.closest&&e.target.closest('.menu-list button');
+  if(owner){ const menu=owner.closest('details.menu'); if(menu) menu.open=false; }
+  const img=$('img-menu'); if(img&&!img.contains(e.target)) img.hidden=true;
+});
 document.addEventListener('keydown',e=>{ if(e.key==='Escape') hideImageMenu(); });
 window.addEventListener('resize',renderWires);
 
 // run timer + code line info
 setInterval(()=>{ $('sb-time').innerText='Run time: '+(isRunning?Math.floor((Date.now()-executionStartTime)/1000):0)+'s'; },500);
-$('code-input').addEventListener('input',()=>{ $('code-info').innerText=$('code-input').value.split('\n').length+' lines'; scheduleCodeHist(); });
+$('code-input').addEventListener('input',()=>{ $('code-info').innerText=$('code-input').value.split('\n').length+' lines'; scheduleCodeHist(); paintRunButtons(isRunning); syncCoach(); });
 
 // auto-save / restore (localStorage, guarded)
 const SAVE_KEY='arduino_sim_v4'; let lastSaved='';
 setInterval(()=>{
   try{
-    const snap=JSON.stringify({code:$('code-input').value,components,wires,arduino:arduinoPos,vertical:boardVertical,board:boardId,breadboard:bbOn?{x:bbPos.x,y:bbPos.y,on:true}:null,view});
+    const snap=JSON.stringify({code:$('code-input').value,components,wires,arduino:arduinoPos,vertical:boardVertical,board:boardId,breadboard:breadboardState(),view});
     if(snap!==lastSaved){localStorage.setItem(SAVE_KEY,snap);lastSaved=snap;$('sb-save').innerText='Auto-save ✔ '+new Date().toLocaleTimeString();}
   }catch(e){$('sb-save').innerText='Auto-save off';}
 },2000);
@@ -319,11 +389,13 @@ function initLabChrome() {
     pop.hidden = !pop.hidden;
     if (!pop.hidden) $('parts-search').focus();
   });
+  const partsCopy = $('parts-copy');
+  if (partsCopy) partsCopy.addEventListener('click', copyPartsList);
   const exampleSearch = $('example-search');
   if (exampleSearch) exampleSearch.addEventListener('input', filterExamples);
   const coachHide = $('first-run-dismiss');
   if (coachHide) coachHide.addEventListener('click', () => {
-    try { sessionStorage.setItem('lab-coach', '1'); } catch (e) {}
+    try { localStorage.setItem('lab-change-prompt', '1'); } catch (e) {}
     $('first-run').hidden = true;
   });
   $('parts-search').addEventListener('input', () => {
@@ -372,8 +444,7 @@ window.onload=function(){
       $('code-input').value=d.code; components=d.components||[]; wires=d.wires||[];
       if(d.arduino && typeof d.arduino.x==='number') arduinoPos={x:d.arduino.x,y:d.arduino.y};
       if(d.vertical) boardVertical=true;
-      if(d.breadboard && d.breadboard.on && typeof d.breadboard.x==='number'){ bbOn=true; bbPos={x:d.breadboard.x,y:d.breadboard.y}; }
-      else bbOn=false;
+      applyBreadboardState(d.breadboard);
       if(d.view) restoreView(d.view);
       nextCompId=components.reduce((m,c)=>Math.max(m,parseInt(String(c.id).slice(1))||0),0)+1;
       applyArduinoPos();
@@ -402,7 +473,7 @@ window.onload=function(){
     }catch(e){}
   } else if(!restored) loadExample(savedBoard==='esp32' ? 'esp32_blink' : 'blink');
   if($('code-input') && !String($('code-input').value||'').trim()) loadExample(savedBoard==='esp32' ? 'esp32_blink' : 'blink');
-  $('code-input').dispatchEvent(new Event('input')); updateCounts();
+  $('code-input').dispatchEvent(new Event('input')); updateCounts(); renderPartsList();
   setTimeout(renderWires,300);
   initLabChrome();
   if (exampleKey && EXAMPLES[exampleKey]) setBoardOpen(true);
@@ -410,12 +481,32 @@ window.onload=function(){
   const gridBox = $('grid-toggle');
   if (gridBox) gridBox.checked = gridVisible;
   try { applyCanvasBg(parseInt(localStorage.getItem('arduino_canvas_bg') || '0', 10) || 0); } catch (e) { applyCanvasBg(0); }
+  const bootCode = $('code-input');
+  if (bootCode && /LED blink/.test(bootCode.value) && /delay\(500\)/.test(bootCode.value) && /ledPin/.test(bootCode.value) && !/Serial\.begin/.test(bootCode.value)) {
+    bootCode.value = bootCode.value.replace(/delay\(500\)/g, 'delay(1000)');
+  }
+  if (bootCode && $('example-select') && !$('example-select').value) {
+    if (/Example 1: LED blink/.test(bootCode.value)) $('example-select').value = 'blink';
+    else if (/ESP32 onboard LED blink/.test(bootCode.value)) $('example-select').value = 'esp32_blink';
+    if ($('example-select').value) showProjectName();
+  }
   histReset();
   syncCoach();
+  if (shouldBootRun()) toggleExecution();
+  const bootKey = ($('example-select') && $('example-select').value) || '';
+  const bootSketch = ($('code-input') && $('code-input').value) || '';
+  if ((!bootKey || bootKey === 'blink' || bootKey === 'esp32_blink') && /delay\(\s*1000\s*\)/.test(bootSketch) && !window.matchMedia('(max-width: 1024px)').matches) focusDelayToken();
 };
 // keep example dropdown in sync when loading one
 const _le=loadExample;
-loadExample=function(k){ histBatch(() => { stopExecution(); if(k==='esp32_blink'){ if(boardId!=='esp32') setBoard('esp32'); } else if(k && boardId!=='uno') setBoard('uno'); if(k) setBoardOpen(true); _le(k); if(k) $('example-select').value=k; $('code-input').dispatchEvent(new Event('input')); if(k){ try{ const url=new URL(location.href); url.searchParams.set('example', k); url.searchParams.set('board', k==='esp32_blink'?'esp32':'uno'); history.replaceState(null,'',url.pathname+url.search); }catch(e){} } }); syncCoach(); };
+function showProjectName(){
+  const el=$('current-project');
+  const sel=$('example-select');
+  if(!el||!sel) return;
+  const text=sel.selectedOptions[0]?sel.selectedOptions[0].textContent:'LED Blink';
+  el.textContent=String(text).replace(/^\d+\.\s*/,'');
+}
+loadExample=function(k){ histBatch(() => { stopExecution(); if(k==='esp32_blink'){ if(boardId!=='esp32') setBoard('esp32'); } else if(k && boardId!=='uno') setBoard('uno'); if(k) setBoardOpen(true); _le(k); if(k) $('example-select').value=k; $('code-input').dispatchEvent(new Event('input')); if(k){ try{ const url=new URL(location.href); url.searchParams.set('example', k); url.searchParams.set('board', k==='esp32_blink'?'esp32':'uno'); history.replaceState(null,'',url.pathname+url.search); }catch(e){} } }); const menu=$('projects-menu'); if(menu&&k) menu.open=false; showProjectName(); syncCoach(); };
 function showLessonReturn(){
   const el=$('back-lesson');
   if(!el) return;
@@ -443,15 +534,89 @@ function filterExamples(){
     group.disabled=!any;
   });
 }
+function applyMode(advanced){
+  document.body.classList.toggle('beginner', !advanced);
+  document.body.classList.toggle('advanced', !!advanced);
+  const btn=$('advanced-toggle');
+  if(btn){
+    btn.setAttribute('aria-pressed', advanced ? 'true' : 'false');
+    btn.textContent=advanced ? 'Beginner' : 'Advanced';
+  }
+}
+function loadUiMode(){
+  let advanced=false;
+  try{ advanced=localStorage.getItem('lab-ui-mode')==='advanced'; }catch(e){}
+  applyMode(advanced);
+}
+function toggleAdvanced(){
+  const next=!document.body.classList.contains('advanced');
+  applyMode(next);
+  try{ localStorage.setItem('lab-ui-mode', next ? 'advanced' : 'beginner'); }catch(e){}
+  renderWires();
+}
+function focusDelayToken(){
+  const area=$('code-input');
+  if(!area) return;
+  area.focus();
+  const match=area.value.match(/delay\(\s*1000\s*\)/);
+  if(!match) return;
+  const start=match.index+match[0].indexOf('1000');
+  area.setSelectionRange(start, start+4);
+}
+function focusCode(){
+  const narrow=window.matchMedia('(max-width: 1024px)').matches;
+  const main=document.querySelector('main');
+  const btn=$('bar-code');
+  if(narrow && main && main.dataset.tab==='code'){
+    setTab('circuit');
+    if(btn) btn.textContent='Code';
+    return;
+  }
+  if(narrow){
+    setTab('code');
+    if(btn) btn.textContent='Circuit';
+  }
+  focusDelayToken();
+}
+function shouldBootRun(){
+  const params=new URLSearchParams(location.search);
+  const asked=params.get('example');
+  if(asked && typeof EXAMPLES!=='undefined' && EXAMPLES[asked]) return true;
+  const code=($('code-input')&&$('code-input').value)||'';
+  const key=($('example-select')&&$('example-select').value)||'';
+  const blink=!key || key==='blink' || key==='esp32_blink';
+  return blink && /delay\(\s*1000\s*\)/.test(code) && /ledPin/.test(code) && !/Serial\.begin/.test(code);
+}
 function syncCoach(){
   const el=$('first-run');
-  if(!el) return;
-  const example=($('example-select')&&$('example-select').value)||'';
-  let hide=false;
-  try{ hide=sessionStorage.getItem('lab-coach')==='1'; }catch(e){}
-  const empty=!example && (!components || !components.length);
-  el.hidden=hide || !empty;
+  const text=$('coach-text');
+  if(!el||!text) return;
+  let dismissed=false;
+  try{ dismissed=localStorage.getItem('lab-change-prompt')==='1'; }catch(e){}
+  if(dismissed){ el.hidden=true; return; }
+  const key=($('example-select')&&$('example-select').value)||'';
+  if(key && key!=='blink' && key!=='esp32_blink'){ el.hidden=true; return; }
+  const code=($('code-input')&&$('code-input').value)||'';
+  const has1000=/delay\(\s*1000\s*\)/.test(code);
+  const has200=/delay\(\s*200\s*\)/.test(code);
+  if(has1000){
+    el.hidden=false;
+    text.innerHTML='<b>Change 1000 to 200.</b> Then press Run and watch the LED.';
+    return;
+  }
+  if(has200 && isRunning && !codeDirty()){
+    el.hidden=false;
+    text.innerHTML='<b>Faster.</b> The LED is using the new delay.';
+    return;
+  }
+  if(has200){
+    el.hidden=false;
+    text.innerHTML='<b>200 is in the sketch.</b> Press Run and watch the LED.';
+    return;
+  }
+  el.hidden=true;
 }
+loadUiMode();
 function stepExample(dir){
   const sel=$('example-select');
   const opts=Array.prototype.filter.call(sel.options, function(opt){ return opt.value && !opt.disabled; });

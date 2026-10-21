@@ -4,14 +4,14 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Arduino Practical Simulator</title>
-<link rel="stylesheet" href="css/simulator.css">
+<link rel="stylesheet" href="css/simulator.css?v=20261018t">
 
 </head>
-<body data-module="simulator/arduino-uno">
+<body class="beginner" data-module="simulator/arduino-uno">
 
 <header>
   <div class="header-start">
-    <details class="menu" id="file-menu"><summary>☰ File</summary><div class="menu-list">
+    <details class="menu advanced-only" id="file-menu"><summary>☰ File</summary><div class="menu-list">
       <button type="button" onclick="newFirstProject()">📄 New Project (LED Blink)</button>
       <button type="button" onclick="newProject()">◻ Empty Project (Arduino only)</button>
       <hr class="menu-rule">
@@ -40,14 +40,20 @@
   </div>
   </div>
 
-  <div class="bar">
+  <div class="bar start-bar beginner-bar">
+    <button type="button" class="btn-primary run-ctl bar-run" id="run-btn" onclick="toggleExecution()" title="Run" aria-label="Run"><span class="run-word">Run</span></button>
+    <button type="button" onclick="restartRun()" title="Reset and run again">Reset</button>
+    <details class="menu" id="projects-menu">
+      <summary>Examples</summary>
+      <div class="menu-list project-picker">
     <select id="board-select" onchange="setBoard(this.value)" aria-label="Board">
       <option value="uno">Arduino Uno</option>
       <option value="esp32">ESP32 DevKit</option>
     </select>
-    <input id="example-search" class="example-search" type="search" placeholder="Search examples" aria-label="Search examples" autocomplete="off">
-    <button type="button" id="example-prev" onclick="stepExample(-1)" title="Previous project" aria-label="Previous project">◀</button>
-    <select id="example-select" onchange="loadExample(this.value)" aria-label="Choose example">
+    <input id="example-search" class="example-search" type="search" placeholder="Search projects" aria-label="Search projects" autocomplete="off">
+    <button type="button" id="example-prev" onclick="stepExample(-1)" title="Previous project" aria-label="Previous project">Previous</button>
+    <button type="button" id="example-next" onclick="stepExample(1)" title="Next project" aria-label="Next project">Next</button>
+    <select id="example-select" size="12" onchange="loadExample(this.value)" aria-label="Choose example">
       <option value="">Choose an example</option>
       <optgroup label="Lights">
         <option value="blink">1. LED Blink</option>
@@ -122,18 +128,26 @@
         <option value="esp32_blink">58. ESP32 Onboard LED Blink (GPIO2)</option>
       </optgroup>
     </select>
-    <button type="button" id="example-next" onclick="stepExample(1)" title="Next project" aria-label="Next project">▶</button>
-        <span class="status-pill" id="status-pill"><i></i><b id="status-txt">Stopped</b></span>
-    <button onclick="restartRun()" title="Reset and run again">↻</button>
+      </div>
+    </details>
+    <button type="button" id="bar-code" onclick="focusCode()">Code</button>
+    <button type="button" onclick="autoConnectWires()" title="Seat parts and connect wires">Auto Wire</button>
+    <button type="button" id="advanced-toggle" onclick="toggleAdvanced()" aria-pressed="false">Advanced</button>
+    <strong id="current-project">LED Blink</strong>
+    <span class="status-pill" id="status-pill"><i></i><b id="status-txt">Stopped</b></span>
     <input type="file" id="load-file-input" accept=".json" style="display:none;" onchange="loadProject(event)">
   </div>
   </header>
+<div class="change-prompt" id="first-run" hidden>
+  <p id="coach-text"><b>Change 1000 to 200.</b> Then press Run and watch the LED.</p>
+  <button type="button" id="first-run-dismiss">Hide</button>
+</div>
 
-<nav class="tabs"><button id="tab-circuit" class="on" onclick="setTab('circuit')">🔌 Circuit</button><button id="tab-code" onclick="setTab('code')">💻 Code and Serial</button></nav>
+<nav class="tabs advanced-only"><button id="tab-circuit" class="on" onclick="setTab('circuit')">🔌 Circuit</button><button id="tab-code" onclick="setTab('code')">💻 Code and Serial</button></nav>
 <main class="lab-split" data-tab="circuit">
   <div class="panel" id="panel-circuit">
-    <div class="panel-title">
-      <span>Circuit Canvas (Hardware Setup)</span>
+    <details class="fold advanced-only">
+      <summary>Tools</summary>
       <div class="wire-toolbar">
         <span>Wires:</span>
         <div class="color-dot" data-color="#171717" style="background:#171717" title="Black (GND)" onclick="setWireColor('#171717', this)"></div>
@@ -146,8 +160,6 @@
         <div class="color-dot" data-color="#7c3aed" style="background:#7c3aed" title="Purple" onclick="setWireColor('#7c3aed', this)"></div>
         <div class="color-dot" data-color="#f4f4f5" style="background:#f4f4f5" title="White" onclick="setWireColor('#f4f4f5', this)"></div>
       </div>
-    </div>
-
     <div class="circuit-tools">
       <button type="button" class="hist-undo" onclick="undoEdit()" title="Undo (Ctrl+Z)" disabled>↶ Undo</button>
       <button type="button" class="hist-redo" onclick="redoEdit()" title="Redo (Ctrl+Y)" disabled>↷ Redo</button>
@@ -157,18 +169,18 @@
       <button onclick="clearWires()">✂ Clear Wires</button>
       <span class="hint" id="hint">Click a pin, then click the part leg.</span>
     </div>
-    <div class="first-run" id="first-run" hidden>
-      <p><b>Start here</b></p>
-      <ol>
-        <li>Press + and add an LED and a 220 ohm resistor.</li>
-        <li>Click pin 13, then the resistor. Click GND, then the LED.</li>
-        <li>Press Run.</li>
-      </ol>
-      <button type="button" id="first-run-dismiss">Hide</button>
-    </div>
+    </details>
+    <details class="fold advanced-only" id="parts-fold">
+      <summary>Parts</summary>
+      <div class="bill-head">
+        <button type="button" id="parts-copy" onclick="copyPartsList()">Copy list</button>
+        <span id="parts-copied" class="hint" hidden>Copied</span>
+      </div>
+      <ul id="bill-list" class="bill-list"></ul>
+    </details>
     <div class="workspace-container" id="workspace">
-      <button type="button" class="parts-plus" id="parts-plus" title="Add part" aria-label="Add part">+</button>
-      <button type="button" class="board-back" id="board-show" hidden onclick="setBoardOpen(true)">Show Arduino</button>
+      <button type="button" class="parts-plus advanced-only" id="parts-plus" title="Add part" aria-label="Add part">+</button>
+      <button type="button" class="board-back advanced-only" id="board-show" hidden onclick="setBoardOpen(true)">Show Arduino</button>
       <div class="parts-pop" id="parts-pop" hidden>
         <input id="parts-search" type="search" placeholder="Search parts" autocomplete="off" aria-label="Search parts">
         <div class="palette" id="parts-list">
@@ -181,6 +193,7 @@
           <button data-find="resistor ohm" onclick="addComponent('res')">🟤 Resistor</button>
           <button data-find="battery cell 9v" onclick="addComponent('bat')">🔋 Battery</button>
           <button data-find="breadboard" onclick="addBreadboard()">🟫 Breadboard</button>
+          <button data-find="breadboard full" onclick="addFullBreadboard()">📏 Full Breadboard</button>
           <button data-find="potentiometer pot" onclick="addComponent('pot')">🎛 Potentiometer</button>
           <button data-find="ultrasonic hcsr04" onclick="addComponent('ultrasonic')">🦇 HC-SR04 Ultrasonic</button>
           <button data-find="servo motor" onclick="addComponent('servo')">🦾 Servo Motor</button>
@@ -204,7 +217,7 @@
 
       <div class="arduino-board" id="arduino-uno">
         <button type="button" class="board-rotate" id="board-rotate" hidden onclick="toggleBoardVertical()" title="Stand the board vertical" aria-label="Stand the board vertical">↻</button>
-        <button type="button" class="board-close" id="board-close" title="Hide board" aria-label="Hide board">×</button>
+        <button type="button" class="board-close advanced-only" id="board-close" title="Hide board" aria-label="Hide board">×</button>
         <img class="uno-face" src="assets/svg/arduino-uno.svg?v=r3" alt="" draggable="false">
         <button type="button" class="uno-reset" onclick="resetArduino()" title="Reset"></button>
         <i class="status-led on-pow" id="led-on" title="ON"></i>
@@ -215,11 +228,12 @@
         <div class="hdr hdr-bot" id="power-analog-pins"></div>
       </div>
 
-      <div class="breadboard" id="breadboard" title="Breadboard"></div>
+      <div class="breadboard off" id="breadboard" title="Breadboard"></div>
+      <div class="breadboard full off" id="breadboard-full" title="Full breadboard"></div>
       <div class="comps-area" id="comps-container"></div>
       </div>
-      <button type="button" class="btn-primary run-big wokwi-run canvas-run" id="run-btn" onclick="toggleExecution()" title="Start simulation" aria-label="Run"><i class="run-glyph"></i><span class="run-word">Run</span></button>
-      <div class="view-hud">
+      <button type="button" class="btn-primary run-big wokwi-run canvas-run run-ctl advanced-only" onclick="toggleExecution()" title="Start simulation" aria-label="Run"><i class="run-glyph"></i><span class="run-word">Run</span></button>
+      <div class="view-hud advanced-only">
         <button type="button" id="pan-mode" onclick="togglePanMode()" title="Drag the canvas" aria-pressed="false">✋ Pan</button>
         <label class="grid-toggle" title="Show or hide the canvas grid"><input id="grid-toggle" type="checkbox" checked onchange="setGridVisible(this.checked)">Grid</label>
         <button type="button" id="canvas-bg" class="canvas-bg" onclick="cycleCanvasBg()" title="Canvas background" aria-label="Change canvas background"><i></i><span id="canvas-bg-name">Graphite</span></button>
@@ -234,24 +248,24 @@
       </div>
     </div>
 
-    <div class="panel-title" style="margin-top:4px;">
-      <span>Waveform Analyzer (<span id="scope-pin">D13</span> Signal Output)</span>
-      <span style="font-size:11px; color:var(--tx-muted)" id="scope-voltage">0.0 V</span>
-    </div>
+    <details class="fold advanced-only">
+      <summary>Signal <span id="scope-pin">D13</span> <span id="scope-voltage">0.0 V</span></summary>
     <div class="scope-panel">
       <canvas id="scope-canvas"></canvas>
     </div>
+    </details>
   </div>
 
   <div class="split-v edge-drag" id="split-v" role="separator" aria-orientation="vertical" aria-label="Resize panels" title="Drag to resize"></div>
 
   <div class="panel" id="panel-code">
     <div class="panel-title">
-      <span>C++ Sketch Editor (Arduino Code)</span>
+      <span>Sketch</span>
       
     </div>
 
     <div class="code-editor-container">
+      <details class="fold advanced-only"><summary>Editor tools</summary>
       <div class="code-tools">
         <button type="button" class="hist-undo" onclick="undoEdit()" title="Undo (Ctrl+Z)" disabled>↶ Undo</button>
         <button type="button" class="hist-redo" onclick="redoEdit()" title="Redo (Ctrl+Y)" disabled>↷ Redo</button>
@@ -260,10 +274,11 @@
         <button onclick="loadExample($('example-select').value||'blink')" title="Restore the example's original code">↺ Original Code</button>
         <span class="hint" id="code-info"></span>
       </div>
+      </details>
       <textarea id="code-input" spellcheck="false" aria-label="Arduino Code Input" onkeydown="handleCodeTab(event)"></textarea>
       <div class="edge-drag edge-s" id="code-resize" role="separator" aria-orientation="horizontal" aria-label="Resize editor" title="Drag to resize editor"></div>
 
-      <div class="panel-title serial-tools" style="border:none; padding:0;">
+      <div class="panel-title serial-tools advanced-only" style="border:none; padding:0;">
         <span>Serial Monitor</span>
         <span id="serial-baud">baud not set</span>
         <label><input id="serial-scroll" type="checkbox" checked> Autoscroll</label>
@@ -273,7 +288,7 @@
         <button type="button" onclick="clearSerial()">Clear</button>
       </div>
 
-      <div class="serial-console">
+      <div class="serial-console advanced-only">
         <div class="serial-output" id="serial-out">-- Arduino Serial Output Ready --\n</div>
         <div class="serial-input-bar">
           <input type="text" id="serial-in" placeholder="Send data to serial (e.g. 1, 0, hello)..." onkeydown="if(event.key==='Enter')sendSerialInput()">
@@ -284,7 +299,7 @@
   </div>
 </main>
 <dialog id="help-dlg"><h3>How to use</h3>
-<ol><li>Press <b>+</b> on the canvas, search, and add a component. <b>×</b> on the board hides the board.</li>
+<ol><li>Beginner mode opens a wired LED that is already blinking. Change <b>1000</b> to <b>200</b>, then press Run. <b>Advanced</b> brings back wiring tools, the scope, and file exports.</li>
 <li>Drag from a pin or breadboard hole and drop on another to connect a wire. Holes in the same column (a–e or f–j) are tied together; power rails are separate. <b>⚡ Auto Wire</b> seats parts and lands wires on the holes.</li>
 <li>Scroll to zoom the canvas. Drag empty space to pan. Press <b>100%</b> to restore the view.</li>
 <li>Run the simulation with the green play icon (<kbd>Ctrl</kbd>+<kbd>Enter</kbd>). Drag the canvas and code edges to resize.</li>
@@ -309,9 +324,9 @@
   <button type="button" id="img-with" onclick="saveCircuitImage(true)">Save image with background</button>
   <button type="button" id="img-plain" onclick="saveCircuitImage(false)">Save image without background</button>
 </div>
-<div class="statusbar"><span id="sb-wires">Wires: 0</span><span id="sb-comps">Components: 0</span><span id="sb-time">Run time: 0s</span><span id="sb-save">Auto-save on</span></div>
+<div class="statusbar advanced-only"><span id="sb-wires">Wires: 0</span><span id="sb-comps">Components: 0</span><span id="sb-time">Run time: 0s</span><span id="sb-save">Auto-save on</span></div>
 
-<script src="js/sim/simulator.js"></script>
+<script src="js/sim/simulator.js?v=20261018t"></script>
 <script src="js/platform.js"></script>
 </body>
 </html>

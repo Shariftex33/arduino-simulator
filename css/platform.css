@@ -137,6 +137,8 @@ h1 { font-size: 32px; letter-spacing: -0.03em; }
 .lab-stats { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 8px; color: var(--tx-muted); }
 .next-step { margin-top: 8px; font-weight: 650; }
 .home-secondary { margin-top: 8px; }
+.more-home { margin-top: 16px; }
+.more-home > summary { cursor: pointer; font-size: 18px; font-weight: 700; }
 .home-secondary h2 { color: var(--tx-muted); font-size: 14px; letter-spacing: .04em; text-transform: uppercase; }
 .level-title { font-size: 22px; margin: 26px 0 4px; scroll-margin-top: 78px; }
 .unit-kicker { color: var(--ac); font-size: 12px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; margin-bottom: 4px; }

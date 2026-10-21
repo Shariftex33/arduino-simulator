@@ -23,6 +23,7 @@ let projectDirty = false;
 let scopeData = new Array(80).fill(0);
 let scopeAnimId = null;
 let executionStartTime = 0;
+let sketchSnapshot = '';
 
 let audioCtx = null;
 let activeOscillators = {};
@@ -41,7 +42,7 @@ const COMP_SPECS = {
   led_g: { name: '🟢 LED (Green)', pins: ['ANODE', 'CATHODE'], color: '#22c55e' },
   led_b: { name: '🔵 LED (Blue)', pins: ['ANODE', 'CATHODE'], color: '#3b82f6' },
   rgb: { name: '🌈 RGB LED', pins: ['R', 'G', 'B', 'GND'] },
-  btn: { name: '🔘 Push Button', pins: ['PIN1', 'PIN2'] },
+  btn: { name: '🔘 Push Button', pins: ['PIN1', 'PIN2', 'PIN3', 'PIN4'] },
   pot: { name: '🎛 Potentiometer', pins: ['VCC', 'OUT', 'GND'] },
   ultrasonic: { name: '🦇 HC-SR04', pins: ['VCC', 'TRIG', 'ECHO', 'GND'] },
   servo: { name: '🦾 Servo Motor', pins: ['PWM', 'VCC', 'GND'] },
@@ -66,20 +67,15 @@ const COMP_SPECS = {
 window.addEventListener('keydown', (e) => {
   if (e.code === 'Space' && document.activeElement.tagName !== 'TEXTAREA' && document.activeElement.tagName !== 'INPUT') {
     e.preventDefault();
-    components.filter(c => c.type === 'btn').forEach(btn => {
-      btn.state.pressed = true;
-    });
-    renderComponents();
+    if (e.repeat) return;
+    components.filter(c => c.type === 'btn').forEach(btn => setCompVal(btn.id, 'pressed', true));
   }
 });
 
 window.addEventListener('keyup', (e) => {
   if (e.code === 'Space' && document.activeElement.tagName !== 'TEXTAREA' && document.activeElement.tagName !== 'INPUT') {
     e.preventDefault();
-    components.filter(c => c.type === 'btn').forEach(btn => {
-      btn.state.pressed = false;
-    });
-    renderComponents();
+    components.filter(c => c.type === 'btn').forEach(btn => setCompVal(btn.id, 'pressed', false));
   }
 });
 
@@ -203,8 +199,9 @@ function setBoard(id) {
 function autoWireColor(type, pinId) {
   if (type === 'bb') {
     const n = holeNet(pinId);
-    if (n === 'tp' || n === 'bp') return '#dc2626';
-    if (n === 'tn' || n === 'bn') return '#171717';
+    if (!n) return null;
+    if (/p/.test(n) && !/n/.test(n)) return '#dc2626';
+    if (/n/.test(n)) return '#171717';
     return null;
   }
   if (type !== 'ard') return null;
@@ -224,7 +221,7 @@ function highlightSelectedPin(target, enable) {
   let selector = target.type === 'ard'
     ? `.pin-node[data-pin="${target.pinId}"]`
     : target.type === 'bb'
-      ? `.bb-hole[data-hole="${target.pinId}"]`
+      ? `.bb-hole[data-hole="${CSS.escape(target.pinId)}"]`
       : `.term-pin[data-pin-id="${target.pinId}"]`;
   const el = document.querySelector(selector);
   if (el) {
@@ -344,7 +341,26 @@ function applyCanvasBg(index) {
 function cycleCanvasBg() {
   applyCanvasBg(canvasBgIndex + 1);
 }
+function codeDirty() {
+  const area = $('code-input');
+  return !!(isRunning && area && area.value !== sketchSnapshot);
+}
+function paintRunButtons(running) {
+  const rerun = !!(running && codeDirty());
+  const stop = !!(running && !rerun);
+  document.querySelectorAll('.run-ctl').forEach(btn => {
+    btn.classList.toggle('is-stop', stop);
+    btn.classList.toggle('btn-danger', stop);
+    btn.classList.toggle('btn-primary', !stop);
+    const label = stop ? 'Stop' : 'Run';
+    btn.title = rerun ? 'Run the changed sketch' : label;
+    btn.setAttribute('aria-label', label);
+    const word = btn.querySelector('.run-word');
+    if (word) word.textContent = label;
+  });
+}
 function onViewWheel(e) {
+  if (document.body.classList.contains('beginner')) return;
   e.preventDefault();
   const ws = $('workspace').getBoundingClientRect();
   const mx = e.clientX - ws.left;
@@ -568,6 +584,7 @@ function renderWires() {
       <path d="${d}" stroke="${rim}" stroke-width="6.2"/>
       <path class="jumper-core" d="${d}" stroke="${w.color}" stroke-width="3.3"/>
       <path d="${d}" stroke="rgba(255,255,255,.42)" stroke-width="1.2" pointer-events="none"/>
+      <path class="jumper-flow" d="${d}" pointer-events="none"/>
       <path d="${d}" stroke="transparent" stroke-width="14" onclick="recolorWire('${w.id}', event)" ondblclick="removeWire('${w.id}')"/>
     </g>`;
   }).join('') + previewMarkup();
@@ -831,6 +848,8 @@ function layoutComponentsParallel() {
   view.y = insetY;
   view.z = Math.max(narrow ? 0.18 : 0.45, Math.min(1, fitX, fitY));
   applyView();
+  placeServoEnds();
+  renderWires();
 }
 
 function nextPartPos() {
@@ -873,6 +892,146 @@ function removeComponent(id) {
   histRemember();
 }
 
+function servoSvg(id, angle) {
+  const turn = Math.round(Number(angle) || 0);
+  return `<svg class="servo-body" viewBox="0 0 320 148" aria-hidden="true">
+    <path d="M150 56 H22 V70" fill="none" stroke="#f97316" stroke-width="5.5" stroke-linejoin="round" stroke-linecap="round"/>
+    <path d="M150 63 H66 V70" fill="none" stroke="#ef4444" stroke-width="5.5" stroke-linejoin="round" stroke-linecap="round"/>
+    <path d="M150 70 H110 V70" fill="none" stroke="#7c3e12" stroke-width="5.5" stroke-linejoin="round" stroke-linecap="round"/>
+    <rect data-end="PWM" x="4" y="70" width="36" height="18" rx="3" fill="#f97316"/>
+    <rect data-end="VCC" x="48" y="70" width="36" height="18" rx="3" fill="#ef4444"/>
+    <rect data-end="GND" x="92" y="70" width="36" height="18" rx="3" fill="#7c3e12"/>
+    <rect x="140" y="52" width="18" height="48" rx="3" fill="#52525b"/>
+    <rect x="146" y="60" width="7" height="32" rx="3" fill="#e7e5e4"/>
+    <rect x="286" y="52" width="18" height="48" rx="3" fill="#52525b"/>
+    <rect x="292" y="60" width="7" height="32" rx="3" fill="#e7e5e4"/>
+    <rect x="154" y="48" width="138" height="56" rx="6" fill="#3f3f46"/>
+    <rect x="160" y="51" width="126" height="11" rx="3" fill="#5c5c66"/>
+  </svg>
+  <div class="servo-horn" id="servo-horn-${id}">
+    <div class="horn-bar" style="transform:rotate(${turn - 180}deg)"><i></i><i></i><i></i></div>
+    <div class="horn-hub" style="transform:rotate(${turn - 180}deg)"><b></b><b></b></div>
+  </div>`;
+}
+
+function paintServoHorn(id, angle) {
+  const horn = $('servo-horn-' + id);
+  if (!horn) return;
+  const a = Math.round(Number(angle) || 0);
+  const bar = horn.querySelector('.horn-bar');
+  const hub = horn.querySelector('.horn-hub');
+  if (bar) bar.style.setProperty('transform', 'rotate(' + (a - 180) + 'deg)', 'important');
+  if (hub) hub.style.setProperty('transform', 'rotate(' + (a - 180) + 'deg)', 'important');
+}
+
+function placeServoEnds() {
+  document.querySelectorAll('.part-servo:not(.seated)').forEach(box => {
+    const host = box.querySelector('.terminals') || box;
+    const hostR = host.getBoundingClientRect();
+    const scale = host.offsetWidth ? hostR.width / host.offsetWidth : 1;
+    if (!scale) return;
+    box.querySelectorAll('.term-pin').forEach(pin => {
+      const tip = box.querySelector('[data-end="' + pin.title + '"]');
+      if (!tip) return;
+      const t = tip.getBoundingClientRect();
+      const w = pin.offsetWidth || 12;
+      const h = pin.offsetHeight || 12;
+      pin.style.left = Math.round((t.left + t.width / 2 - hostR.left) / scale - w / 2) + 'px';
+      pin.style.top = Math.round((t.top + t.height / 2 - hostR.top) / scale - h / 2) + 'px';
+      pin.style.margin = '0';
+    });
+  });
+}
+
+function pushButtonSvg(id) {
+  const u = String(id).replace(/[^A-Za-z0-9_-]/g, '') || 'btn';
+  const g = name => u + '-' + name;
+  return `<svg class="btn-art" viewBox="0 0 200 200" aria-hidden="true">
+    <defs>
+      <linearGradient id="${g('pin')}" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stop-color="#888888"/><stop offset="50%" stop-color="#d0d0d0"/><stop offset="100%" stop-color="#666666"/>
+      </linearGradient>
+      <linearGradient id="${g('strap')}" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stop-color="#ffffff" stop-opacity="0.6"/><stop offset="50%" stop-color="#cccccc" stop-opacity="0.4"/><stop offset="100%" stop-color="#aaaaaa" stop-opacity="0.5"/>
+      </linearGradient>
+      <linearGradient id="${g('plate')}" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#f0f0f0"/><stop offset="50%" stop-color="#e1e1e1"/><stop offset="100%" stop-color="#cccccc"/>
+      </linearGradient>
+      <radialGradient id="${g('cap')}" cx="35%" cy="35%" r="65%">
+        <stop offset="0%" stop-color="#00b300"/><stop offset="50%" stop-color="#008000"/><stop offset="85%" stop-color="#004d00"/><stop offset="100%" stop-color="#001a00"/>
+      </radialGradient>
+      <filter id="${g('bodyShadow')}" x="-12%" y="-12%" width="124%" height="124%">
+        <feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#000" flood-opacity="0.35"/>
+      </filter>
+      <filter id="${g('capShadow')}" x="-20%" y="-20%" width="140%" height="140%">
+        <feDropShadow dx="0" dy="4" stdDeviation="3" flood-color="#000" flood-opacity="0.4"/>
+      </filter>
+    </defs>
+    <g fill="url(#${g('pin')})" stroke="#444444" stroke-width="1.5">
+      <rect x="22" y="66" width="30" height="12" rx="2"/><rect x="18" y="70" width="8" height="4" rx="1"/>
+      <rect x="22" y="122" width="30" height="12" rx="2"/><rect x="18" y="126" width="8" height="4" rx="1"/>
+      <rect x="148" y="66" width="30" height="12" rx="2"/><rect x="174" y="70" width="8" height="4" rx="1"/>
+      <rect x="148" y="122" width="30" height="12" rx="2"/><rect x="174" y="126" width="8" height="4" rx="1"/>
+    </g>
+    <rect x="42" y="42" width="116" height="116" rx="8" fill="#333333" stroke="#222222" stroke-width="3" filter="url(#${g('bodyShadow')})"/>
+    <rect x="48" y="48" width="104" height="104" rx="5" fill="url(#${g('plate')})" stroke="#888888" stroke-width="1.5"/>
+    <rect x="48" y="64" width="104" height="16" fill="url(#${g('strap')})"/>
+    <rect x="48" y="120" width="104" height="16" fill="url(#${g('strap')})"/>
+    <g fill="#111111">
+      <circle cx="58" cy="58" r="4.5"/><circle cx="142" cy="58" r="4.5"/>
+      <circle cx="58" cy="142" r="4.5"/><circle cx="142" cy="142" r="4.5"/>
+    </g>
+    <circle cx="100" cy="100" r="41" fill="#262626" stroke="#1a1a1a" stroke-width="2"/>
+    <circle cx="100" cy="100" r="39.5" fill="none" stroke="#4a4a4a" stroke-width="1"/>
+    <g class="plunger">
+      <circle cx="100" cy="100" r="38" fill="url(#${g('cap')})" filter="url(#${g('capShadow')})"/>
+      <circle cx="100" cy="100" r="36.5" fill="none" stroke="#00b300" stroke-opacity="0.5" stroke-width="1.5"/>
+    </g>
+  </svg>`;
+}
+
+function pressAttrs(id) {
+  return `onmousedown="setCompVal('${id}', 'pressed', true)" onmouseup="setCompVal('${id}', 'pressed', false)" onmouseleave="setCompVal('${id}', 'pressed', false)" ontouchstart="setCompVal('${id}', 'pressed', true)" ontouchend="setCompVal('${id}', 'pressed', false)"`;
+}
+
+function looseButtonBody(c) {
+  const down = c.state.pressed ? ' down' : '';
+  return `<div class="btn-face${down}">${pushButtonSvg(c.id)}<button type="button" class="tact svg-btn plunger-hit${down}" aria-pressed="${c.state.pressed ? 'true' : 'false'}" aria-label="Press" title="Press" ${pressAttrs(c.id)}></button></div>`;
+}
+
+function seatedButtonBody(c, lay) {
+  const dot = BB.hole / 2;
+  const pt = name => [lay.pins[name].left + dot, lay.pins[name].top + dot];
+  const pins = ['PIN1', 'PIN2', 'PIN3', 'PIN4'].filter(name => lay.pins[name]).map(pt);
+  const cx = pins.reduce((sum, p) => sum + p[0], 0) / pins.length;
+  const cy = pins.reduce((sum, p) => sum + p[1], 0) / pins.length;
+  const legs = pins.map(([x, y]) => {
+    const dx = x - cx, dy = y - cy;
+    const len = Math.hypot(dx, dy) || 1;
+    return `<line x1="${(cx + dx / len * 8).toFixed(1)}" y1="${(cy + dy / len * 8).toFixed(1)}" x2="${x.toFixed(1)}" y2="${y.toFixed(1)}" stroke="#b8b8b8" stroke-width="2.4" stroke-linecap="square"/>`;
+  }).join('');
+  const down = c.state.pressed ? ' down' : '';
+  const cap = 18;
+  const g = String(c.id).replace(/[^A-Za-z0-9_-]/g, '') + '-seat';
+  return `<div class="seat-btn">
+    <svg class="seat-legs" viewBox="0 0 ${lay.w} ${lay.h}">${legs}</svg>
+    <div class="btn-face${down}" style="left:${(cx - cap / 2).toFixed(1)}px;top:${(cy - cap / 2).toFixed(1)}px;width:${cap}px;height:${cap}px">
+      <svg class="btn-art" viewBox="0 0 40 40" aria-hidden="true">
+        <defs>
+          <radialGradient id="${g}" cx="35%" cy="35%" r="65%">
+            <stop offset="0%" stop-color="#00b300"/><stop offset="50%" stop-color="#008000"/><stop offset="85%" stop-color="#004d00"/><stop offset="100%" stop-color="#001a00"/>
+          </radialGradient>
+        </defs>
+        <rect x="1" y="1" width="38" height="38" rx="4" fill="#333" stroke="#222" stroke-width="2"/>
+        <rect x="4" y="4" width="32" height="32" rx="2" fill="#e6e6e6" stroke="#888"/>
+        <circle cx="20" cy="20" r="13" fill="#262626"/>
+        <g class="plunger"><circle cx="20" cy="20" r="12" fill="url(#${g})"/></g>
+      </svg>
+      <button type="button" class="tact svg-btn plunger-hit${down}" aria-pressed="${c.state.pressed ? 'true' : 'false'}" aria-label="Press" title="Press" ${pressAttrs(c.id)}></button>
+    </div>
+  </div>`;
+}
+
 function renderComponents() {
   touchAdj();
   const container = $('comps-container');
@@ -880,6 +1039,8 @@ function renderComponents() {
   container.innerHTML = components.map(c => {
     const spec = COMP_SPECS[c.type];
     if (!spec) return '';
+    const lay = c.seat ? seatedLayout(c) : null;
+    if (lay) { c.x = lay.x; c.y = lay.y; }
     let bodyHtml = '';
     
     if (c.type === 'led_r' || c.type === 'led_y' || c.type === 'led_g' || c.type === 'led_b') {
@@ -888,7 +1049,7 @@ function renderComponents() {
     } else if (c.type === 'rgb') {
       bodyHtml = `<div class="led-part rgb-led" id="rgb-node-${c.id}"><svg viewBox="0 0 48 64" width="40" height="52"><rect x="20" y="40" width="3" height="18" fill="#94a3b8"/><rect x="26" y="44" width="3" height="14" fill="#94a3b8"/><path class="dome" d="M10 40 L10 22 A14 14 0 0 1 38 22 L38 40 Z"/><ellipse cx="24" cy="40" rx="14" ry="4" fill="#27272a"/></svg></div>`;
     } else if (c.type === 'btn') {
-      bodyHtml = `<button class="tact svg-btn${c.state.pressed ? ' down' : ''}" onmousedown="setCompVal('${c.id}', 'pressed', true)" onmouseup="setCompVal('${c.id}', 'pressed', false)" onmouseleave="setCompVal('${c.id}', 'pressed', false)" ontouchstart="setCompVal('${c.id}', 'pressed', true)" ontouchend="setCompVal('${c.id}', 'pressed', false)" title="Press"><img src="assets/svg/button.svg" alt="" draggable="false"></button>`;
+      bodyHtml = lay && lay.kind === 'btn' ? seatedButtonBody(c, lay) : looseButtonBody(c);
     } else if (c.type === 'pot') {
       const ang = (Number(c.state.value) / 1023) * 270 - 135;
       bodyHtml = `<div class="pot-svg"><img class="part-art" src="assets/svg/pot.svg" alt="" draggable="false"><div class="pot-knob" style="transform:rotate(${ang}deg)"></div></div><span class="val-lbl">${labelFor(c)}</span>`;
@@ -908,10 +1069,7 @@ function renderComponents() {
       bodyHtml = `<div class="seg-svg"><img class="part-art" src="assets/svg/seg7.svg" alt="" draggable="false"><div class="seg-display" id="seg-${c.id}">${c.state.segNum}</div></div>`;
     } else if (c.type === 'servo') {
       bodyHtml = `
-        <div class="servo-svg">
-          <img class="part-art" src="assets/svg/servo.svg" alt="" draggable="false">
-          <div class="servo-horn" id="servo-horn-${c.id}" style="transform:rotate(${c.state.angle}deg)"></div>
-        </div>
+        <div class="servo-svg">${servoSvg(c.id, c.state.angle)}</div>
         <span class="val-lbl" id="servo-lbl-${c.id}">${c.state.angle}°</span>
       `;
     } else if (c.type === 'lcd') {
@@ -934,19 +1092,25 @@ function renderComponents() {
       bodyHtml = `<div class="bat-body"><img class="part-art" src="assets/svg/battery.svg" alt="" draggable="false"><span class="val-lbl">${labelFor(c)}</span></div>`;
     }
 
-    const lay = c.seat ? seatedLayout(c) : null;
-    if (lay) { c.x = lay.x; c.y = lay.y; }
     const pinLabel = { ANODE: '+', CATHODE: '−', POS: '+', PIN1: '1', PIN2: '2', OUT: 'S', DATA: 'DAT', PWM: 'SIG', A: '1', B: '2', NEG: '−' };
     const sideOf = { A: 'l', B: 'r', NEG: 'l', POS: 'r' };
+    const servoEnds = { PWM: [17, 77], VCC: [56, 77], GND: [94, 77] };
     const termPinsHtml = spec.pins.map(p => {
-      const st = lay && lay.pins[p] ? ` style="left:${lay.pins[p].left}px;top:${lay.pins[p].top}px"` : '';
+      const looseServo = c.type === 'servo' && !lay && servoEnds[p];
+      const st = lay && lay.pins[p]
+        ? ` style="left:${lay.pins[p].left}px;top:${lay.pins[p].top}px"`
+        : looseServo
+          ? ` style="left:${servoEnds[p][0]}px;top:${servoEnds[p][1]}px;margin:0"`
+          : '';
       const side = sideOf[p] ? ` data-side="${sideOf[p]}"` : '';
       return `<div class="term-pin" data-pin-id="${c.id}-${p}" data-lbl="${pinLabel[p] || p}" title="${p}"${side}${st}></div>`;
     }).join('');
     const side = (c.type === 'res' || c.type === 'bat') ? ' side-pins' : '';
 
+    const artVars = lay && lay.art ? `--art-x:${lay.art.x}px;--art-y:${lay.art.y}px;--art-w:${lay.art.w}px;--art-h:${lay.art.h}px;` : '';
+    const fit = lay ? (lay.kind === 'btn' ? ' fit-btn' : lay.kind === 'leads' ? ' fit-leads' : ' fit-mod') : '';
     return `
-      <div class="comp-box part part-${c.type}${side}${lay ? ' seated' : ''}${lay && lay.flat ? ' flat' : ''}${pickedId === c.id ? ' picked' : ''}${selectedIds.has(c.id) ? ' selected' : ''}" id="comp-${c.id}" style="left:${c.x}px; top:${c.y}px;${lay ? `width:${lay.w}px;height:${lay.h}px;` : ''}" onmousedown="dragStart(event, '${c.id}')" ontouchstart="dragStart(event, '${c.id}')">
+      <div class="comp-box part part-${c.type}${side}${lay ? ' seated' : ''}${fit}${pickedId === c.id ? ' picked' : ''}${selectedIds.has(c.id) ? ' selected' : ''}" id="comp-${c.id}" style="left:${c.x}px; top:${c.y}px;${lay ? `width:${lay.w}px;height:${lay.h}px;${artVars}` : ''}" onmousedown="dragStart(event, '${c.id}')" ontouchstart="dragStart(event, '${c.id}')">
         <span class="part-name">${PART_NAMES[c.type] || spec.name}</span>
         <button class="comp-close" onclick="removeComponent('${c.id}')" title="Remove">✕</button>
         <div class="comp-body">${bodyHtml}</div>
@@ -956,6 +1120,8 @@ function renderComponents() {
   }).join('');
 
   markOccupiedHoles();
+  placeServoEnds();
+  if (typeof renderWires === 'function') renderWires();
   updateVisualOutputs();
 }
 
